@@ -1,0 +1,35 @@
+<ion-view view-title="Sign Up">
+  <ion-content>
+    <form ng-submit="doSignUp()">
+    	<div class="list">    	
+        <label class="item item-input">
+          <span class="input-label">First Name</span>
+          <input type="text" ng-model="loginData.firstname">
+        </label>
+        <label class="item item-input">
+          <span class="input-label">Last Name</span>
+          <input type="text" ng-model="loginData.lastname">
+        </label>
+        <label class="item item-input">
+          <span class="input-label">Enrollment Number</span>
+          <input type="text" ng-model="loginData.enrollmentnumber">
+        </label>
+        <label class="item item-input">
+          <span class="input-label">Email</span>
+          <input type="text" ng-model="loginData.email">
+        </label>
+        <label class="item item-input">
+          <span class="input-label">Password</span>
+          <input type="password" ng-model="loginData.password">
+        </label>
+        <label class="item">
+        	<ion-radio ng-model="choice" ng-value="Teacher">Teacher</ion-radio>
+        	<ion-radio ng-model="choice" ng-value="Parent">Parent</ion-radio>
+    	</label>
+    	<label class="item">
+          <button class="button button-block button-positive" type="submit">Sign Up</button>
+        </label>
+      </div>
+    </form>
+  </ion-content>
+</ion-view>

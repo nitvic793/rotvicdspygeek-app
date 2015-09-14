@@ -39,6 +39,11 @@ angular.module('starter.controllers', [])
       $scope.closeLogin();
     }, 1000);
   };
+
+  //Logic for sign up
+  $scope.doSignUp = function(){
+    
+  };
 })
 
 .controller('PlaylistsCtrl', function($scope) {
