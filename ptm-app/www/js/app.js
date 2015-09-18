@@ -4,7 +4,7 @@
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic', 'starter.controllers'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -40,12 +40,36 @@ angular.module('starter', ['ionic', 'starter.controllers'])
       }
     }
   })
+  .state('app.setOfficeHours', {
+    url: '/set-office-hours',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/set-office-hours.html'
+      }
+    }
+  })
 
   .state('app.browse', {
       url: '/browse',
       views: {
         'menuContent': {
           templateUrl: 'templates/browse.html'
+        }
+      }
+    })
+  .state('app.about', {
+      url: '/about',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/about.html'
+        }
+      }
+    })
+  .state('app.settings', {
+      url: '/settings',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/settings.html'
         }
       }
     })
@@ -76,6 +100,24 @@ angular.module('starter', ['ionic', 'starter.controllers'])
         }
       }
   })
+  .state('app.chats', {
+      url: '/chats',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/chats.html',
+          controller: 'ChatsCtrl'
+        }
+      }
+    })
+    .state('app.chat-detail', {
+      url: '/chats/:chatId',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/chat-detail.html',
+          controller: 'ChatDetailCtrl'
+        }
+      }
+    })
   .state('app.login', {
     url: '/login',
     views: {
