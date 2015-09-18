@@ -1,30 +1,34 @@
 <ion-view view-title="Sign Up">
   <ion-content>
-    <form ng-submit="doSignUp()">
-    	<div class="list">    	
+    <form name="signUpForm" ng-submit="doSignUp(signUpForm)">
+    	<div class="list">
         <label class="item item-input">
           <span class="input-label">First Name</span>
-          <input type="text" ng-model="loginData.firstname">
+          <input type="text" ng-model="signUpData.firstname">
         </label>
         <label class="item item-input">
           <span class="input-label">Last Name</span>
-          <input type="text" ng-model="loginData.lastname">
+          <input type="text" ng-model="signUpData.lastname">
         </label>
         <label class="item item-input">
           <span class="input-label">Enrollment Number</span>
-          <input type="text" ng-model="loginData.enrollmentnumber">
+          <input type="text" id="enrollmentNumber" ng-model="signUpData.registrationNo">
         </label>
         <label class="item item-input">
           <span class="input-label">Email</span>
-          <input type="text" ng-model="loginData.email">
+          <input type="text" ng-model="signUpData.email">
         </label>
         <label class="item item-input">
           <span class="input-label">Password</span>
-          <input type="password" ng-model="loginData.password">
+          <input type="password" ng-model="signUpData.password">
+        </label>
+        <label class="item item-input">
+          <span class="input-label">Confirm Password</span>
+          <input type="password" ng-model="signUpData.confirmPassword">
         </label>
         <label class="item">
-        	<ion-radio ng-model="choice" ng-value="Teacher">Teacher</ion-radio>
-        	<ion-radio ng-model="choice" ng-value="Parent">Parent</ion-radio>
+        	<ion-radio ng-model="signUpData.choice" ng-value="'Teacher'" ng-change="radioChange()">Teacher</ion-radio>
+        	<ion-radio ng-model="signUpData.choice" ng-value="'Parent'" ng-change="radioChange()">Parent</ion-radio>
     	</label>
     	<label class="item">
           <button class="button button-block button-positive" type="submit">Sign Up</button>
