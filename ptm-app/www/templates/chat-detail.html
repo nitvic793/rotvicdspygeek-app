@@ -10,5 +10,16 @@
     <p>
       {{chat.lastText}}
     </p>
+  <div class="bottommsg">
+    <div class="item item-input-inset light-grey">
+      <label  class="item-input-wrapper line-light-grey nopadtop">
+        <input ng-change="chatCtrl.updateTyping()" type="text"  placeholder="Message" ng-enter="chatCtrl.sendMessage()" ng-model="chatCtrl.message"> 
+      </label>
+      <div>
+          <button class="button button-clear ion-android-send iconsend" ng-click="chatCtrl.sendMessage()"></button>
+      </div>
+    </div>
+  </div>  
+<!-- </ion-view>-->
   </ion-content>
 </ion-view>

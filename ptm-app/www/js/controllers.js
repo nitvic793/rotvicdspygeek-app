@@ -96,7 +96,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config'])
         console.log(res);
         if(res.statusText=='Created'){
           $scope.showAlert("Sign up succesful!");
-          $state.go('app.login');
+          $state.go('app.browse');
         }
         else{
           $scope.showAlert("Oops, Error in signing you up!")
@@ -135,6 +135,16 @@ angular.module('starter.controllers', ['ionic', 'starter.config'])
     { title: 'Rap', id: 5 },
     { title: 'Cowbell', id: 6 }
   ];
+})
+
+.controller('AppCtrl', function($scope, $ionicModal) {
+  
+  $ionicModal.fromTemplateUrl('templates/modal.html', {
+    scope: $scope
+  }).then(function(modal) {
+    $scope.modal = modal;
+  });
+
 })
 
 .controller('PlaylistCtrl', function($scope, $stateParams) {

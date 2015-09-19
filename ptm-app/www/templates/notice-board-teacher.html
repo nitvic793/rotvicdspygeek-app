@@ -1,5 +1,12 @@
-<ion-view view-title="Notice Board">
-  <ion-content>  
+<ion-view view-title="Notice Board" ng-controller="AppCtrl">
+<ion-nav-buttons side="right">
+       <button class="button button-icon ion-compose" ng-click="modal.show()"></button>
+    </ion-nav-buttons>
+  <ion-content>
+ <!-- <div class="buttons">-->
+
+    
+ <!--</div>-->
     <div class="card">
 	  <div class="item item-text-wrap">
 	    This is a basic Card which contains an item that has wrapping text.

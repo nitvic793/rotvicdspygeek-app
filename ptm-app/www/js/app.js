@@ -49,11 +49,20 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     }
   })
 
+  .state('app.studentReview', {
+    url: '/student-review',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/student-review.html'
+      }
+    }
+  })
+
   .state('app.browse', {
       url: '/browse',
       views: {
         'menuContent': {
-          templateUrl: 'templates/browse.html'
+          templateUrl: 'templates/notice-board-teacher.html'
         }
       }
     })
@@ -62,6 +71,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       views: {
         'menuContent': {
           templateUrl: 'templates/about.html'
+        }
+      }
+    })
+  .state('app.profile', {
+      url: '/profile',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/profile.html'
         }
       }
     })
