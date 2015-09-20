@@ -1,6 +1,6 @@
 angular.module('starter.controllers', ['ionic', 'starter.config','starter.services'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService) {
+.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService, school) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -8,7 +8,11 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   // listen for the $ionicView.enter event:
   //$scope.$on('$ionicView.enter', function(e) {
   //});
-
+  $scope.schools = [];
+  school.getAll(function(data){
+    console.log(data);
+    $scope.schools = data;
+  });
   // Form data for the login modal
   $scope.loginData = {
     userType:'Parent'
@@ -163,6 +167,10 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
   console.log(sessionService.get("loginData"));
+
+})
+
+.controller('StudentReviewCtrl', function($scope, $state, $ionicModal, sessionService, classes) {
 
 })
 

@@ -26,10 +26,17 @@
           <span class="input-label">Confirm Password</span>
           <input type="password" ng-model="signUpData.confirmPassword">
         </label>
+        <label class="item item-input item-select">
+            <div class="input-label">
+             School
+            </div>
+            <select ng-model="signUpData.school" ng-options="school.schoolName for school in schools">
+            </select>
+        </label>
         <label class="item">
         	<ion-radio ng-model="signUpData.choice" ng-value="'Teacher'" ng-change="radioChange()">Teacher</ion-radio>
         	<ion-radio ng-model="signUpData.choice" ng-value="'Parent'" ng-change="radioChange()">Parent</ion-radio>
-    	</label>
+    	   </label>
     	<label class="item">
           <button class="button button-block button-positive" type="submit">Sign Up</button>
         </label>

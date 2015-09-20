@@ -119,6 +119,21 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     return this;
 }])
 
+.factory('school', function($http, urlConfig, sessionService){
+  var url = urlConfig.backend + "school"
+  return {
+    getAll: function(callback) {
+      $http.get(url).then(function(res){
+          callback(res.data);
+        },
+        function(err){
+          callback(null);
+        }
+      );
+    }
+  }
+})
+
 .factory('noticeBoard', function($http, urlConfig, sessionService){
   var announcements = [];
   var url = urlConfig.backend+"noticeboard";

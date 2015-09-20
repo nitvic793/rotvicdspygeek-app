@@ -53,7 +53,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     url: '/student-review',
     views: {
       'menuContent': {
-        templateUrl: 'templates/student-review.html'
+        templateUrl: 'templates/student-review.html',
+        controller : 'StudentReviewCtrl'
       }
     }
   })
