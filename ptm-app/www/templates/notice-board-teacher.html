@@ -1,21 +1,21 @@
-<ion-view view-title="Notice Board" ng-controller="AppCtrl">
+<ion-view view-title="Notice Board" ng-controller="NoticeBoardCtrl">
 <ion-nav-buttons side="right">
-       <button class="button button-icon ion-compose" ng-click="modal.show()"></button>
+       <button class="button button-icon ion-compose" ng-click="noticeModal.show()"></button>
     </ion-nav-buttons>
   <ion-content>
  <!-- <div class="buttons">-->
 
-    
+
  <!--</div>-->
-    <div class="card">
-	  <div class="item item-text-wrap">
-	    This is a basic Card which contains an item that has wrapping text.
+  <div class="card" ng-repeat="notice in notices">
+	  <div class="item item-body">
+      {{notice.message}}
 	  </div>
-	</div>
-	<div class="card">
-	  <div class="item item-text-wrap">
-	    This is a basic Card which contains an item that has wrapping text.
-	  </div>
+    <div class="item">
+    <h4>{{notice.teacher.firstname}} {{notice.teacher.lastname}}</h4>
+    <h4>Class {{notice.class.standard}} {{notice.class.section}}</h4>
+    <h4><time datetime="temporal">{{notice.createdAt | date:'MMM d yyyy'}}</time>
+    </div>
 	</div>
   </ion-content>
 </ion-view>

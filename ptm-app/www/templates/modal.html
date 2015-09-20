@@ -1,26 +1,19 @@
 <ion-modal-view>
         <ion-header-bar class="bar bar-header bar-positive">
           <h1 class="title">Announce</h1>
-          <button class="button button-clear button-primary" ng-click="modal.hide()">Cancel</button>
+          <button class="button button-clear button-primary" ng-click="noticeModal.hide()">Cancel</button>
         </ion-header-bar>
         <ion-content class="padding">
-        <!--  <div class="list">
-            <!--<label class="item item-input">
-              <span class="input-label">First Name</span>
-              <input ng-model="newUser.firstName" type="text">
-            </label>
-            <label class="item item-input">
-              <span class="input-label">Last Name</span>
-              <input ng-model="newUser.lastName" type="text">
-            </label>
-            <label class="item item-input">
-              <span class="input-label">Email</span>
-              <input ng-model="newUser.email" type="text">
-            </label>-->
             <label class="item item-input">
               <textarea ng-model="announcement.message">
               </textarea>
-            </label>
+            </label><label class="item item-input item-select">
+                <div class="input-label">
+                  Class
+                </div>
+                <select ng-model="announcement.forClass" ng-options="cl.standard + ' ' + cl.section for cl in cls">
+                </select>
+              </label>
             <button class="button button-full button-positive" ng-click="postMessage(announcement)">Post</button>
          <!-- </div>-->
         </ion-content>

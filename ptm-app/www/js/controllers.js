@@ -1,6 +1,6 @@
-angular.module('starter.controllers', ['ionic', 'starter.config'])
+angular.module('starter.controllers', ['ionic', 'starter.config','starter.services'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig) {
+.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -11,6 +11,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config'])
 
   // Form data for the login modal
   $scope.loginData = {
+    userType:'Parent'
   };
   //Form data for the sign up page
   $scope.signUpData = {
@@ -23,6 +24,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config'])
   }).then(function(modal) {
     $scope.modal = modal;
   });
+
+
 
   // Triggered in the login modal to close it
   $scope.closeLogin = function() {
@@ -54,6 +57,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config'])
       $scope.showAlert('Invalid Username/Password');
     })
     .then(function(res){
+      console.log(res);
+      sessionService.store("loginData",res.data);
       $state.transitionTo('app.browse');
     });
     // Simulate a login delay. Remove this and replace with your login
@@ -126,6 +131,41 @@ angular.module('starter.controllers', ['ionic', 'starter.config'])
   $scope.chat = Chats.get($stateParams.chatId);
 })
 
+.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal, sessionService, classes){
+
+  $scope.cls = [];
+  $scope.notices = [];
+  classes.getAllClasses(function(cls)
+  {
+    $scope.cls = cls;
+  });
+  function updateNoticeBoard()
+  {
+    noticeBoard.getAllNotices(function(notices)
+    {
+      $scope.notices = notices;
+      console.log(notices);
+    });
+  }
+  updateNoticeBoard();
+
+  $ionicModal.fromTemplateUrl('templates/modal.html', {
+    scope: $scope
+  }).then(function(modal) {
+    $scope.noticeModal = modal;
+  })
+
+  $scope.postMessage = function(announcement) {
+    console.log(announcement);
+    noticeBoard.postNotice(announcement);
+    updateNoticeBoard();
+    $scope.noticeModal.hide();
+  }
+
+  console.log(sessionService.get("loginData"));
+
+})
+
 .controller('PlaylistsCtrl', function($scope) {
   $scope.playlists = [
     { title: 'Reggae', id: 1 },
@@ -136,16 +176,5 @@ angular.module('starter.controllers', ['ionic', 'starter.config'])
     { title: 'Cowbell', id: 6 }
   ];
 })
-
-.controller('AppCtrl', function($scope, $ionicModal) {
-  
-  $ionicModal.fromTemplateUrl('templates/modal.html', {
-    scope: $scope
-  }).then(function(modal) {
-    $scope.modal = modal;
-  });
-
-})
-
 .controller('PlaylistCtrl', function($scope, $stateParams) {
 });

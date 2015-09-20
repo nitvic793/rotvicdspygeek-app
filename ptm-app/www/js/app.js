@@ -62,7 +62,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       url: '/browse',
       views: {
         'menuContent': {
-          templateUrl: 'templates/notice-board-teacher.html'
+          templateUrl: 'templates/notice-board-teacher.html',
+          controller: 'NoticeBoardCtrl'
         }
       }
     })

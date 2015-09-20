@@ -17,6 +17,10 @@
           <input type="password" ng-model="loginData.password">
         </label>
         <label class="item">
+        	<ion-radio ng-model="loginData.userType" ng-value="'Teacher'">Teacher</ion-radio>
+        	<ion-radio ng-model="loginData.userType" ng-value="'Parent'">Parent</ion-radio>
+    	   </label>
+        <label class="item">
           <button class="button button-block button-positive" type="submit">Log in</button>
         </label>
       </div>
