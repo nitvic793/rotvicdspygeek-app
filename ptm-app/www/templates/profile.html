@@ -1,20 +1,17 @@
 <ion-view view-title="Profile">
-  <ion-content>  
+  <ion-content>
     <div class="list">
 	  <label class="item item-input">
-	    <input type="text" placeholder="Name">
+	    <input type="text" placeholder="Name" ng-value="user.firstname + ' ' + user.lastname">
 	  </label>
 	  <label class="item item-input">
-	    <input type="email" placeholder="Email">
+	    <input type="email" placeholder="Email" ng-value="user.email">
 	  </label>
-	  <!--This select should be available only in the parent version. Teacher side of the app should be greyed out -->	   
+	  <!--This select should be available only in the parent version. Teacher side of the app should be greyed out -->
 	</div>
 	<label class="item item-select">
-		  <select>
-		      <option>Parent</option>
-		      <option selected>Teacher</option>
-		      <option>Guardian</option>
-	    </select>
+    <select ng-model="userType.value" ng-options="v for v in userType.values">
+    </select>
 		</label>
   </ion-content>
 </ion-view>

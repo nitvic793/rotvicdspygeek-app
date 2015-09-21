@@ -1,3 +1,12 @@
+function genericGetAll($http, url, callback){
+  $http.get(url).then(function(res){
+      callback(res.data);
+    },
+    function(err){
+      callback(null);
+  });
+}
+
 angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
 
 .factory('Chats', function() {
@@ -123,13 +132,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   var url = urlConfig.backend + "school"
   return {
     getAll: function(callback) {
-      $http.get(url).then(function(res){
-          callback(res.data);
-        },
-        function(err){
-          callback(null);
-        }
-      );
+      genericGetAll($http, url, callback);
     }
   }
 })
@@ -172,13 +175,16 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   var url = urlConfig.backend+"class";
   return {
     getAllClasses : function (callback) {
-      $http.get(url).then(function(res){
-          callback(res.data);
-        },
-        function(err){
-          callback(null);
-        }
-      );
+      genericGetAll($http, url, callback);
+    }
+  };
+})
+.factory('student', function($http, urlConfig)
+{
+  var url = urlConfig.backend+"student";
+  return {
+    getAllStudents : function (callback) {
+      genericGetAll($http, url, callback);
     }
   };
 });

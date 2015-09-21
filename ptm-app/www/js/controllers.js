@@ -173,7 +173,20 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 .controller('StudentReviewCtrl', function($scope, $state, $ionicModal, sessionService, classes) {
 
 })
+.controller('ProfileCtrl', function($scope, sessionService) {
+  currentUser = sessionService.get("loginData");
+  $scope.user = currentUser.model;
+  $scope.userType = currentUser.userType;
+  console.log(currentUser);
 
+  $scope.userType = {
+   "type": "select",
+   "name": "User Type",
+   "value": currentUser.userType,
+   "values": [ "Parent", "Teacher", "Gaurdian"]
+ };
+
+})
 .controller('PlaylistsCtrl', function($scope) {
   $scope.playlists = [
     { title: 'Reggae', id: 1 },
