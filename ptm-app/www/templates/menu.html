@@ -20,14 +20,17 @@
       <ion-list>
         <!--<ion-item menu-close ng-click="login()">
           Login
-        </ion-item>-->        
+        </ion-item>-->
         <ion-item menu-close href="#/app/browse">
           Notice Board
         </ion-item>
         <ion-item menu-close href="#/app/chats">
           Chat
         </ion-item>
-        <ion-item menu-close href="#/app/student-review">
+        <ion-item menu-close href="#/app/student-review" ng-hide="isParent">
+          Student Review
+        </ion-item>
+        <ion-item menu-close href="#/app/my-ward" ng-show="isParent">
           My Ward
         </ion-item>
         <ion-item menu-close href="#/app/settings">

@@ -167,6 +167,10 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
           callback(null);
         }
       );
+    },
+    getNoticesOfClass: function(classId, callback){
+      var classUrl = url+"/?class="+classId;
+      genericGetAll($http,classUrl,callback);
     }
   };
 })
@@ -185,6 +189,14 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   return {
     getAllStudents : function (callback) {
       genericGetAll($http, url, callback);
+    },
+    getWardsOfParent: function(parent, callback){
+      var wardUrl = urlConfig.backend+"wardrelation/?parent="+parent.id;
+      genericGetAll($http,wardUrl,callback);
+    },
+    getWardReviews: function(ward, callback){
+      var reviewUrl = urlConfig.backend+"studentreview/?student="+ward.id;
+      genericGetAll($http,reviewUrl,callback);
     }
   };
 });

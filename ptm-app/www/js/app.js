@@ -58,6 +58,15 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       }
     }
   })
+  .state('app.myWard', {
+    url: '/my-ward',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/myward.html',
+        controller : 'MyWardCtrl'
+      }
+    }
+  })
 
   .state('app.browse', {
       url: '/browse',

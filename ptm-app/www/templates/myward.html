@@ -1,0 +1,12 @@
+<ion-view view-title="My Ward">
+  <ion-content>
+    <div class="card" ng-repeat="review in reviews">
+	     <div class="item item-text-wrap" >
+	        {{review.review}}
+	     </div>
+       <div class="item">
+         <h4><time datetime="temporal">{{review.createdAt | date:'MMM d yyyy'}}</time></h4>
+       </div>
+	</div>
+  </ion-content>
+</ion-view>

@@ -1,6 +1,6 @@
 angular.module('starter.controllers', ['ionic', 'starter.config','starter.services'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService, school) {
+.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService, school, student) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -13,6 +13,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     console.log(data);
     $scope.schools = data;
   });
+  $scope.isParent = true;
   // Form data for the login modal
   $scope.loginData = {
     userType:'Parent'
@@ -63,6 +64,16 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     .then(function(res){
       console.log(res);
       sessionService.store("loginData",res.data);
+      if(res.data.userType=="Parent"){
+        student.getWardsOfParent(res.data.model,function(data){
+          sessionService.store("wards", data);
+          console.log(data);
+        });
+        $scope.isParent = true;
+      }
+      else {
+        $scope.isParent = false;
+      }
       $state.transitionTo('app.browse');
     });
     // Simulate a login delay. Remove this and replace with your login
@@ -137,19 +148,32 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 .controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal, sessionService, classes){
 
+  var userType = sessionService.get("loginData").userType;
+  var ward;
+  if(userType=='Parent'){
+    ward = sessionService.get("wards")[0].student;
+  }
   $scope.cls = [];
   $scope.notices = [];
+  $scope.modalShow = false;
   classes.getAllClasses(function(cls)
   {
     $scope.cls = cls;
   });
   function updateNoticeBoard()
   {
-    noticeBoard.getAllNotices(function(notices)
-    {
-      $scope.notices = notices;
-      console.log(notices);
-    });
+    if(userType=='Teacher'){
+      noticeBoard.getAllNotices(function(notices){
+        $scope.notices = notices;
+        console.log(notices);
+      });
+    }
+    else {
+      noticeBoard.getNoticesOfClass(ward.class,function(notices){
+        $scope.notices = notices;
+        console.log(notices);
+      });
+    }
   }
   updateNoticeBoard();
 
@@ -166,12 +190,25 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $scope.noticeModal.hide();
   }
 
-  console.log(sessionService.get("loginData"));
-
+  $scope.$on('$ionicView.enter', function(e) {
+    updateNoticeBoard();
+  });
 })
 
 .controller('StudentReviewCtrl', function($scope, $state, $ionicModal, sessionService, classes) {
 
+})
+
+.controller('MyWardCtrl', function($scope, $state, $ionicModal, sessionService, student) {
+  var userType = sessionService.get("loginData").userType;
+  var ward;
+  $scope.reviews = [];
+  if(userType=='Parent'){
+    ward = sessionService.get("wards")[0].student;
+  }
+  student.getWardReviews(ward,function(data){
+    $scope.reviews = data;
+  });
 })
 .controller('ProfileCtrl', function($scope, sessionService) {
   currentUser = sessionService.get("loginData");
