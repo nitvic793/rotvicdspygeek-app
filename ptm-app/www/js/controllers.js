@@ -67,14 +67,17 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       if(res.data.userType=="Parent"){
         student.getWardsOfParent(res.data.model,function(data){
           sessionService.store("wards", data);
+          $scope.isParent = true;
           console.log(data);
+          $state.go('app.browse');
         });
-        $scope.isParent = true;
+
       }
       else {
         $scope.isParent = false;
+        $state.go('app.browse');
       }
-      $state.transitionTo('app.browse');
+
     });
     // Simulate a login delay. Remove this and replace with your login
     // code if using a login system
@@ -127,7 +130,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   };
 })
 
-.controller('ChatsCtrl', function($scope, Chats) {
+.controller('ChatsCtrl', function($scope, Chats, sessionService, classes, teachers, student) {
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
   // To listen for when this page is active (for example, to refresh data),
@@ -135,15 +138,93 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //
   //$scope.$on('$ionicView.enter', function(e) {
   //});
+  var userType = sessionService.get("loginData").userType;
+  var ward;
 
-  $scope.chats = Chats.all();
-  $scope.remove = function(chat) {
-    Chats.remove(chat);
+  $scope.chatItems = [];
+  if(userType=='Parent'){
+    ward = sessionService.get("wards")[0].student;
+    var wardClass = ward.class;
+    classes.getTeachersOfClass(wardClass, function(data){
+      for(i=0;i<data.length;++i){
+        name = data[i].teacher.firstname+' '+data[i].teacher.lastname;
+        subject = data[i].subject.subjectname;
+        $scope.chatItems[i] = {
+          id:data[i].teacher.id,
+          name:name,
+          subject: subject
+        };
+      }
+    });
   }
+  else {
+    var loginData = sessionService.get("loginData");
+    var user = loginData.model;
+    var teacherId = loginData.model.id;
+    teachers.getAllClassesOfTeacher(teacherId, function(data){
+      data.forEach(function(element,index,array){
+        classId = element.class.id;
+        student.getStudentsOfClass(classId, function(students){
+          students.forEach(function(val,i,a){
+            student.getWardDataOfStudent(val.id,function(wards){
+              wards.forEach(function(ward,ind,arr){
+                console.log(ward);
+                name = ward.parent.firstname + ' ' + ward.parent.lastname;
+                subject = element.class.standard+' '+element.class.section + ', ' + ward.type + ', ' + ward.student.firstName + ' ' + ward.student.lastName;
+                $scope.chatItems.push({
+                  id:ward.parent.id,
+                  name:name,
+                  subject: subject
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+  // $scope.chats = Chats.all();
+  // $scope.remove = function(chat) {
+  //   Chats.remove(chat);
+  // }
 })
 
-.controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
-  $scope.chat = Chats.get($stateParams.chatId);
+.controller('ChatDetailCtrl', function($scope, $stateParams, Chats, sessionService, parents, teachers) {
+  $scope.hideTime = true;
+  var userType = sessionService.get("loginData").userType;
+  var alternate, isIOS = ionic.Platform.isWebView() && ionic.Platform.isIOS();
+  $scope.messages = [];
+  $scope.userData = {};
+  $scope.myId = sessionService.get("loginData").model.id;
+  userId = $stateParams.chatId; //Get user Id of who we are going to chat with
+  ///Retrieve user data of the person we are going to chat with. This depends on whether the current user is a parent or a teacher.
+  if(userType=="Parent"){
+    teachers.getTeacher(userId, function(data){
+      $scope.userData = data;
+    });
+  }
+  else{
+    parents.getParent(userId, function(data){
+      $scope.userData = data;
+    });
+  }
+  io.socket.on('message', function(msg){
+    
+  });
+  $scope.sendMessage = function() {
+    //TO DO : Need to integrate socket/GCM/ApplePush services here for sending messages. Maybe just socket for now
+    alternate = !alternate;
+    var d = new Date();
+    d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+    obj = {
+      userId: alternate ? $scope.myId : userId,
+      text: $scope.data.message,
+      time: d
+    };
+    $scope.messages.push(obj);
+    console.log(obj);
+  }
+  //$scope.chat = Chats.get($stateParams.chatId);
 })
 
 .controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal, sessionService, classes){
@@ -165,13 +246,11 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
         $scope.notices = notices;
-        console.log(notices);
       });
     }
     else {
       noticeBoard.getNoticesOfClass(ward.class,function(notices){
         $scope.notices = notices;
-        console.log(notices);
       });
     }
   }
@@ -196,7 +275,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 })
 
 .controller('StudentReviewCtrl', function($scope, $state, $ionicModal, sessionService, classes) {
-
+  //Need to add search students mechanism
 })
 
 .controller('MyWardCtrl', function($scope, $state, $ionicModal, sessionService, student) {

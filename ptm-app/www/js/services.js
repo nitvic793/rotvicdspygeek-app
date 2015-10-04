@@ -180,6 +180,34 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   return {
     getAllClasses : function (callback) {
       genericGetAll($http, url, callback);
+    },
+    getTeachersOfClass: function(cls, callback){
+      var getUrl = urlConfig.backend+"subjectTeacher?class="+cls;
+      genericGetAll($http,getUrl,callback);
+    }
+  };
+})
+.factory('teachers', function($http, urlConfig){
+  var classes = [];
+  var url = urlConfig.backend+"teacher";
+  return {
+    getAllClassesOfTeacher : function (teacher,callback) {
+      var getUrl = urlConfig.backend+"subjectteacher?teacher="+teacher;
+      genericGetAll($http, getUrl, callback);
+    },
+    getTeacher : function (id,callback) {
+      getUrl = url+"/"+id;
+      genericGetAll($http, getUrl, callback);
+    }
+  };
+})
+.factory('parents', function($http, urlConfig){
+  var classes = [];
+  var url = urlConfig.backend+"parents";
+  return {
+    getParent: function (id,callback) {
+      var getUrl = url+"/"+id;
+      genericGetAll($http, getUrl, callback);
     }
   };
 })
@@ -189,6 +217,14 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   return {
     getAllStudents : function (callback) {
       genericGetAll($http, url, callback);
+    },
+    getStudentsOfClass : function(cls,callback){
+      getUrl = url+'?class='+cls;
+      genericGetAll($http, getUrl, callback);
+    },
+    getWardDataOfStudent : function (studentId,callback) {
+      var wardUrl = urlConfig.backend+"wardrelation/?student="+studentId;
+      genericGetAll($http,wardUrl,callback);
     },
     getWardsOfParent: function(parent, callback){
       var wardUrl = urlConfig.backend+"wardrelation/?parent="+parent.id;

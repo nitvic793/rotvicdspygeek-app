@@ -5,11 +5,11 @@
     <i class="icon ion-search placeholder-icon"></i>
     <input type="text" placeholder="Search">
   </label>
-</div>   
-      <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="chat in chats" type="item-text-wrap" href="#/app/chats/{{chat.id}}">
-        <img ng-src="{{chat.face}}">
+</div>
+      <ion-item class="item-remove-animate  item-icon-right" ng-repeat="chat in chatItems" type="item-text-wrap" href="#/app/chats/{{chat.id}}">
+        <!-- <img ng-src="{{chat.face}}"> -->
         <h2>{{chat.name}}</h2>
-        <p>{{chat.lastText}}</p>
+        <p>{{chat.subject}}</p>
         <i class="icon ion-chevron-right icon-accessory"></i>
 
         <ion-option-button class="button-assertive" ng-click="remove(chat)">
