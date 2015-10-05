@@ -2,28 +2,27 @@
   <ion-content>
   <div class="list padding">
 	  <label class="item item-input">
-	    <input type="text" placeholder="To:">
+	    <input type="text" placeholder="To:" ng-model="review.studentName" ng-click="modal.show()">
 	  </label>
 	  <label class="item item-input">
-	    <textarea placeholder="Comments"></textarea>
+	    <textarea placeholder="Comments" ng-model="review.comments"></textarea>
 	  </label>
-	  <button class="button button-full button-positive" ng-click="postMessage(studentReview)">Post</button>
+	  <button class="button button-full button-positive" ng-click="postReview()">Post</button>
   </div>
-    <div class="card">
+  <div class="item item-divider">
+    My Reviews
+  </div>
+  <div class="card" ng-repeat="rev in reviews">
     <div class="item item-divider">
-    	Shreyas Deshmukh
+     {{rev.student.firstName}} {{rev.student.lastName}}
     </div>
-	  <div class="item item-text-wrap">
-	    He's an excellent student. Has been doing exceptional work
-	  </div>
-	</div>
-	<div class="card">
-	   <div class="item item-divider">
-    	Farhan Ali Md.
-    </div>
-	  <div class="item item-text-wrap">
-	    He's so annoying #$***#. Never Mind!
-	  </div>
-	</div>
+     <div class="item item-text-wrap" >
+        {{rev.review}}
+     </div>
+     <div class="item">
+       <h5>Registration No: <i>{{rev.student.registrationNo}}</i></h5>
+       <h4><time datetime="temporal">{{rev.createdAt | date:'MMM d yyyy'}}</time></h4>
+     </div>
+   </div>
   </ion-content>
 </ion-view>

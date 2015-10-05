@@ -197,33 +197,61 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   $scope.userData = {};
   $scope.myId = sessionService.get("loginData").model.id;
   userId = $stateParams.chatId; //Get user Id of who we are going to chat with
+  var teacherId,parentId;
   ///Retrieve user data of the person we are going to chat with. This depends on whether the current user is a parent or a teacher.
   if(userType=="Parent"){
     teachers.getTeacher(userId, function(data){
       $scope.userData = data;
     });
+    parentId = $scope.myId;
+    teacherId = userId;
   }
   else{
     parents.getParent(userId, function(data){
       $scope.userData = data;
     });
+    parentId = userId;
+    teacherId = $scope.myId;
+  }
+  function getLatestChats(){
+    var skip = $scope.messages.length;
+    Chats.getChats(teacherId,parentId,skip, function(data){
+      data.forEach(function (val,i,a) {
+        obj = {
+          userId: val.senderId,
+          text: val.message,
+          time: new Date(val.time).toLocaleTimeString().replace(/:\d+ /, ' ')
+        };
+        $scope.messages.push(obj);
+      })
+    });
   }
   io.socket.on('message', function(msg){
-    
+
   });
+  getLatestChats();
   $scope.sendMessage = function() {
-    //TO DO : Need to integrate socket/GCM/ApplePush services here for sending messages. Maybe just socket for now
-    alternate = !alternate;
     var d = new Date();
     d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+    Chats.sendChat({
+      parent:parentId,
+      teacher:teacherId,
+      senderId:$scope.myId,
+      sender:userType,
+      message:$scope.data.message,
+      time:new Date()
+    });
+    //TO DO : Need to integrate socket/GCM/ApplePush services here for sending messages. Maybe just socket for now
+
     obj = {
-      userId: alternate ? $scope.myId : userId,
+      userId: $scope.myId,
       text: $scope.data.message,
       time: d
     };
     $scope.messages.push(obj);
     console.log(obj);
   }
+  var intervalID = setInterval(getLatestChats,2000);
   //$scope.chat = Chats.get($stateParams.chatId);
 })
 
@@ -274,8 +302,58 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   });
 })
 
-.controller('StudentReviewCtrl', function($scope, $state, $ionicModal, sessionService, classes) {
+.controller('StudentReviewCtrl', function($scope, $state, $ionicModal, $ionicPopup, sessionService, classes, student, teachers) {
   //Need to add search students mechanism
+  $scope.review = {};
+  $scope.reviews = [];
+  $ionicModal.fromTemplateUrl('templates/studentListView.html', function(modal) {
+     $scope.modal = modal;
+   }, {
+     // Use our scope for the scope of the modal to keep it simple
+     scope: $scope,
+     // The animation we want to use for the modal entrance
+     animation: 'slide-in-up'
+   });
+   var myId = sessionService.get("loginData").model.id;
+   teachers.getTeacherReviews(myId, function(data){
+     $scope.reviews = data;
+   });
+
+   $scope.showAlert = function(message) {
+     var alertPopup = $ionicPopup.alert({
+       title: 'Message',
+       template: message
+     });
+     alertPopup.then(function(res) {
+       console.log('Alert box shown!');
+     });
+   }
+
+   $scope.onChange = function(){
+     student.getStudentsLike($scope.review.studentNameModal,function(data){
+       $scope.studs = data;
+     });
+   }
+
+   $scope.onClickList = function(model){
+     $scope.modal.hide();
+     $scope.review.model = model;
+     $scope.review.studentName = model.firstName + ' ' + model.lastName;
+   }
+
+   $scope.postReview = function(){
+     var obj = {
+       teacher: sessionService.get("loginData").model,
+       student: $scope.review.model,
+       review: $scope.review.comments
+     };
+     if($scope.review.model){
+       teachers.postReview(obj);
+     }
+     else {
+       $scope.showAlert("Invalid student name entered!");
+     }
+   }
 })
 
 .controller('MyWardCtrl', function($scope, $state, $ionicModal, sessionService, student) {

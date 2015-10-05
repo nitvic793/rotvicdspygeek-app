@@ -9,51 +9,23 @@ function genericGetAll($http, url, callback){
 
 angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
 
-.factory('Chats', function() {
-  // Might use a resource here that returns a JSON array
-
-  // Some fake testing data
-  var chats = [{
-    id: 0,
-    name: 'Ben Sparrow',
-    lastText: 'You on your way?',
-    face: 'https://pbs.twimg.com/profile_images/514549811765211136/9SgAuHeY.png'
-  }, {
-    id: 1,
-    name: 'Max Lynx',
-    lastText: 'Hey, it\'s me',
-    face: 'https://avatars3.githubusercontent.com/u/11214?v=3&s=460'
-  },{
-    id: 2,
-    name: 'Adam Bradleyson',
-    lastText: 'I should buy a boat',
-    face: 'https://pbs.twimg.com/profile_images/479090794058379264/84TKj_qa.jpeg'
-  }, {
-    id: 3,
-    name: 'Perry Governor',
-    lastText: 'Look at my mukluks!',
-    face: 'https://pbs.twimg.com/profile_images/598205061232103424/3j5HUXMY.png'
-  }, {
-    id: 4,
-    name: 'Mike Harrington',
-    lastText: 'This is wicked good ice cream.',
-    face: 'https://pbs.twimg.com/profile_images/578237281384841216/R3ae1n61.png'
-  }];
-
+.factory('Chats', function($http, urlConfig) {
+  var url = urlConfig.backend+"chat";
   return {
-    all: function() {
-      return chats;
+    getChats: function (teacherId, parentId,skip, callback) {
+      var getUrl = url+"?teacher="+teacherId+"&parent="+parentId+"&skip="+skip;
+      genericGetAll($http,getUrl,callback);
     },
-    remove: function(chat) {
-      chats.splice(chats.indexOf(chat), 1);
-    },
-    get: function(chatId) {
-      for (var i = 0; i < chats.length; i++) {
-        if (chats[i].id === parseInt(chatId)) {
-          return chats[i];
-        }
-      }
-      return null;
+    sendChat : function (chatObj) {
+      console.log(chatObj);
+      var createUrl = url+"/create";
+      $http.post(createUrl,chatObj)
+      .error(function(data, status, headers, config) {
+        console.log("Error in sending message!");
+      })
+      .then(function(res){
+        console.log('Message sent! '+ res.data);
+      });
     }
   };
 })
@@ -198,6 +170,20 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     getTeacher : function (id,callback) {
       getUrl = url+"/"+id;
       genericGetAll($http, getUrl, callback);
+    },
+    getTeacherReviews: function(teacherId, callback){
+      getUrl = urlConfig.backend + "studentreview?teacher="+teacherId;
+      genericGetAll($http, getUrl, callback);
+    },
+    postReview: function(review){
+      createUrl = urlConfig.backend + "studentreview/create";
+      $http.post(createUrl,review)
+      .error(function(data, status, headers, config) {
+        console.log("Error in posting review!");
+      })
+      .then(function(res){
+        console.log('Review posted! '+ res.data);
+      });
     }
   };
 })
@@ -217,6 +203,14 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   return {
     getAllStudents : function (callback) {
       genericGetAll($http, url, callback);
+    },
+    getStudentsLike: function(name,callback){
+      name = name.split(' ');
+      if(!name[1]){
+        name[1] = '';
+      }
+      var getUrl = url+'?where={"firstName":{"contains":"'+name[0]+'"},%20"lastName":{"contains":"'+name[1]+'"}}';
+      genericGetAll($http, getUrl, callback);
     },
     getStudentsOfClass : function(cls,callback){
       getUrl = url+'?class='+cls;

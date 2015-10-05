@@ -1,6 +1,9 @@
 <ion-view view-title="My Ward">
   <ion-content>
     <div class="card" ng-repeat="review in reviews">
+      <div class="item item-divider">
+       {{review.teacher.firstname}} {{review.teacher.lastname}}
+      </div>
 	     <div class="item item-text-wrap" >
 	        {{review.review}}
 	     </div>
