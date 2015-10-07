@@ -161,7 +161,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
 })
 .factory('teachers', function($http, urlConfig){
   var classes = [];
-  var url = urlConfig.backend+"teacher";
+  var url = urlConfig.backend+"teachers";
   return {
     getAllClassesOfTeacher : function (teacher,callback) {
       var getUrl = urlConfig.backend+"subjectteacher?teacher="+teacher;

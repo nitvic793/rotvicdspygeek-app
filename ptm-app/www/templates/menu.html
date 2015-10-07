@@ -1,4 +1,4 @@
-<ion-side-menus enable-menu-with-back-views="true">
+<ion-side-menus enable-menu-with-back-views="true" ng-controller="MenuCtrl">
   <ion-side-menu-content>
     <ion-nav-bar class="bar-stable">
       <ion-nav-back-button>
@@ -36,7 +36,7 @@
         <ion-item menu-close href="#/app/settings">
           Settings
         </ion-item>
-        <ion-item menu-close href="#/app/settings">
+        <ion-item menu-close href="#/app/settings" ng-show="isLoggedIn">
           Logout
         </ion-item>
       </ion-list>

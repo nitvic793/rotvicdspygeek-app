@@ -112,14 +112,14 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         }
       }
       else {
-        createUrl =  urlConfig.backend+'teacher/create';
+        createUrl =  urlConfig.backend+'teachers/create';
       }
       delete data.choice;
       $http.post(createUrl,data).then(function(res) {
         console.log(res);
         if(res.statusText=='Created'){
           $scope.showAlert("Sign up succesful!");
-          $state.go('app.browse');
+          $state.go('app.login');
         }
         else{
           $scope.showAlert("Oops, Error in signing you up!")
@@ -429,7 +429,21 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   $scope.messages = [];
 
 })
-
+.controller('MenuCtrl', function($scope, $stateParams, sessionService) {
+  $scope.isParent = false;
+  if(sessionService.get("loginData")!=null){
+    $scope.isLoggedIn = true;
+    if(sessionService.get("loginData").userType=="Parent"){
+      $scope.isParent = true;
+    }
+    else{
+      $scope.isParent = false;
+    }
+  }
+  else{
+    $scope.isLoggedIn = false;
+  }
+})
 .controller('PlaylistsCtrl', function($scope) {
   $scope.playlists = [
     { title: 'Reggae', id: 1 },
