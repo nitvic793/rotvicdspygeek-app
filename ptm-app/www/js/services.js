@@ -132,7 +132,8 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       });
     },
     getAllNotices : function (callback) {
-      $http.get(url).then(function(res){
+      var getUrl = url+"/?sort=createdAt DESC";
+      $http.get(getUrl).then(function(res){
           callback(res.data);
         },
         function(err){
@@ -141,7 +142,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       );
     },
     getNoticesOfClass: function(classId, callback){
-      var classUrl = url+"/?class="+classId;
+      var classUrl = url+"/?sort=createdAt DESC&class="+classId;
       genericGetAll($http,classUrl,callback);
     }
   };
@@ -156,6 +157,40 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     getTeachersOfClass: function(cls, callback){
       var getUrl = urlConfig.backend+"subjectTeacher?class="+cls;
       genericGetAll($http,getUrl,callback);
+    },
+    getAllSubjects : function(callback){
+      var getUrl = urlConfig.backend+"subject";
+      genericGetAll($http,getUrl,callback);
+    },
+    getSubjectsOfTeacher: function(teacherId, callback){
+      var getUrl = urlConfig.backend+"subjectteacher?teacher="+teacherId;
+      genericGetAll($http,getUrl,callback);
+    },
+    getSubjectsLike: function(subject,callback){
+      var getUrl = urlConfig.backend + 'subject?where={"subjectName":{"contains":"'+subject+'"}}';
+      genericGetAll($http,getUrl,callback);
+    },
+    createSubjectTeacher: function(model,callback){
+      var createUrl = urlConfig.backend+'subjectteacher/create';
+      $http.post(createUrl,model)
+      .error(function(data, status, headers, config) {
+        console.log("Error in creating subject teacher relation!",data);
+        callback(data);
+      })
+      .then(function(res){
+        console.log('Subject teacher relation created! ',res.data);
+        callback(res.data);
+      });
+    },
+    removeSubjectTeacher: function(id,callback){
+      var deleteUrl = urlConfig.backend+"subjectteacher?id="+id;
+      $http.delete(deleteUrl).then(function(res){
+          callback(res);
+      },
+      function(err){
+        callback(null);
+      }
+    );
     }
   };
 })
@@ -172,7 +207,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       genericGetAll($http, getUrl, callback);
     },
     getTeacherReviews: function(teacherId, callback){
-      getUrl = urlConfig.backend + "studentreview?teacher="+teacherId;
+      getUrl = urlConfig.backend + "studentreview?sort=createdAt DESC&teacher="+teacherId;
       genericGetAll($http, getUrl, callback);
     },
     postReview: function(review){
@@ -225,7 +260,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       genericGetAll($http,wardUrl,callback);
     },
     getWardReviews: function(ward, callback){
-      var reviewUrl = urlConfig.backend+"studentreview/?student="+ward.id;
+      var reviewUrl = urlConfig.backend+"studentreview/?sort=createdAt DESC&student="+ward.id;
       genericGetAll($http,reviewUrl,callback);
     }
   };

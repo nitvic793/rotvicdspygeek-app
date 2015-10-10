@@ -1,0 +1,21 @@
+<ion-view view-title="Student Review">
+  <ion-content>
+  <div class="list padding">
+	  <label class="item item-input">
+	    <input type="text" placeholder="To:" ng-model="myWard.studentName" ng-click="modal.show()">
+	  </label>
+	  <button class="button button-full button-positive" ng-click="addWard()">Add Ward</button>
+  </div>
+  <div class="item item-divider">
+    My Wards
+  </div>
+  <div class="card" ng-repeat="ward in wards">
+    <div class="item item-divider">
+     {{ward.student.firstName}} {{ward.student.lastName}}
+    </div>
+     <div class="item item-text-wrap" >
+       <strong>Registration No:</strong> <i>{{ward.student.registrationNo}}</i>
+     </div>
+   </div>
+  </ion-content>
+</ion-view>

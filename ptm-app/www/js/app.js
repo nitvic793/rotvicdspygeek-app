@@ -74,7 +74,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     url: '/search',
     views: {
       'menuContent': {
-        templateUrl: 'templates/search.html'
+        templateUrl: 'templates/logout.html'
       }
     }
   })
@@ -105,7 +105,24 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       }
     }
   })
-
+  .state('app.addWard', {
+    url: '/settings/addWard',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/addWard.html',
+        controller : 'AddWardCtrl'
+      }
+    }
+  })
+  .state('app.addSubject', {
+    url: '/settings/addSubject',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/addSubject.html',
+        controller : 'AddSubjectCtrl'
+      }
+    }
+  })
   .state('app.browse', {
       url: '/browse',
       views: {
@@ -136,7 +153,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       url: '/settings',
       views: {
         'menuContent': {
-          templateUrl: 'templates/settings.html'
+          templateUrl: 'templates/settings.html',
+          controller:"SettingsCtrl"
         }
       }
     })
@@ -190,6 +208,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     views: {
       'menuContent': {
         templateUrl: 'templates/login.html'
+      }
+    }
+  }).state('app.logout', {
+    url: '/logout',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/logout.html',
+        controller: 'LogoutCtrl'
       }
     }
   });

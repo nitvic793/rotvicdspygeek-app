@@ -4,11 +4,19 @@
     	<a class="item item-icon-left" href="#app/profile">
     		<i class="icon ion-person"></i>
 		    Profile
-		 </a>   
+		 </a>
+     <a class="item item-icon-left" href="#app/settings/addWard" ng-show="isParent">
+       <i class="icon ion-person"></i>
+       Ward
+     </a>
+     <a class="item item-icon-left" href="#app/settings/addSubject" ng-hide="isParent">
+       <i class="icon ion-compose"></i>
+       Subjects
+     </a>
 		 <a class="item item-icon-left" href="#app/set-office-hours">
     		<i class="icon ion-briefcase"></i>
 		    Set Office Hours
-		 </a>   		    	
+		 </a>
     	 <li class="item item-toggle">
 	     Office Hours
 	     <label class="toggle toggle-assertive">
@@ -21,7 +29,7 @@
 	  <a class="item item-icon-left" href="#app/about">
     		<i class="icon ion-earth"></i>
 		    About
-		 </a>   		    		  
+		 </a>
 	</ion-list>
   </ion-content>
 </ion-view>

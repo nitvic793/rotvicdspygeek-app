@@ -1,0 +1,18 @@
+<ion-modal-view>
+        <ion-header-bar class="bar bar-header bar-positive">
+          <h1 class="title">Add Subject</h1>
+          <button class="button button-clear button-primary" ng-click="modal.hide()">Cancel</button>
+        </ion-header-bar>
+        <ion-content class="padding">
+              <label class="item item-input">
+          	    <input type="text" placeholder="Enter Subject" ng-model="subModal.nameModal" ng-change="onChange()">
+          	  </label>
+            <ion-list >
+              <ion-item ng-repeat="sub in subs">
+                <div ng-click="onClickList(sub)">
+                  <strong>{{sub.subjectName}}</strong>
+                </div>
+              </ion-item>
+            </ion-list>
+        </ion-content>
+</ion-modal-view>

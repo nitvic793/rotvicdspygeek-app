@@ -1,3 +1,23 @@
+function isLoggedIn(sessionService){
+  var data = sessionService.get("loginData");
+  if(!data || !data.userType || !data.model){
+    return false;
+  }
+  else{
+    return true;
+  }
+}
+
+function takeActionIfNotLoggedIn(sessionService, $state){
+  if(!isLoggedIn(sessionService)){
+    $state.go('login', {}, {reload: true});
+  }
+}
+
+function isCurrentUserAParent(sessionService){
+  return sessionService.get("loginData").userType=="Parent";
+}
+
 angular.module('starter.controllers', ['ionic', 'starter.config','starter.services'])
 
 .controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService, school, student) {
@@ -23,7 +43,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     choice:'Parent'
   };
   $scope.message = '';
-  // Create the login modal that we will use later
+
   $ionicModal.fromTemplateUrl('templates/login.html', {
     scope: $scope
   }).then(function(modal) {
@@ -69,13 +89,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           sessionService.store("wards", data);
           $scope.isParent = true;
           console.log(data);
-          $state.go('app.browse');
+          $state.go('app.browse',  {}, {reload: true});
         });
 
       }
       else {
         $scope.isParent = false;
-        $state.go('app.browse');
+        $state.go('app.browse',  {}, {reload: true});
       }
 
     });
@@ -256,7 +276,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 })
 
 .controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal, sessionService, classes){
-
   var userType = sessionService.get("loginData").userType;
   var ward;
   if(userType=='Parent'){
@@ -317,6 +336,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
    var myId = sessionService.get("loginData").model.id;
    teachers.getTeacherReviews(myId, function(data){
      $scope.reviews = data;
+     console.log("Reviews",data);
    });
 
    $scope.showAlert = function(message) {
@@ -443,6 +463,127 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   else{
     $scope.isLoggedIn = false;
   }
+
+})
+.controller('LogoutCtrl', function($scope, $stateParams,$state, sessionService) {
+  sessionService.destroy("loginData");
+  $state.go("app.login");
+})
+.controller('AddWardCtrl', function($scope, $stateParams, $ionicModal, student, sessionService) {
+  $scope.review = {};
+  $scope.wards = [];
+  $scope.studs = [];
+  model = sessionService.get("loginData").model;
+  student.getWardsOfParent(model,function(data){
+    console.log(data);
+    data.forEach(function(val,i,a){
+      $scope.wards.push(val);
+    });
+  });
+  $scope.onChange = function(){
+    student.getStudentsLike($scope.review.studentNameModal,function(data){
+      $scope.studs = data;
+    });
+  }
+  $scope.onClickList = function(model){
+    $scope.modal.hide();
+    $scope.review.model = model;
+    $scope.review.studentName = model.firstName + ' ' + model.lastName;
+  }
+
+  $ionicModal.fromTemplateUrl('templates/studentListView.html', function(modal) {
+     $scope.modal = modal;
+   }, {
+     scope: $scope,
+     animation: 'slide-in-up'
+   });
+})
+.controller('SettingsCtrl', function($scope, $stateParams, sessionService) {
+  $scope.isParent = isCurrentUserAParent(sessionService);
+  console.log($scope.isParent);
+})
+.controller('AddSubjectCtrl', function($scope, $stateParams,$ionicModal, $ionicActionSheet, $timeout,sessionService, student, classes) {
+  $ionicModal.fromTemplateUrl('templates/subjectModal.html', function(modal) {
+     $scope.modal = modal;
+   }, {
+     scope: $scope,
+     animation: 'slide-in-up'
+   });
+   model = sessionService.get("loginData").model;
+   $scope.subjects = [];
+
+   function loadClasses(){
+     $scope.cls = [];
+     classes.getAllClasses(function(cls) {
+       $scope.cls = cls;
+     });
+   }
+
+   function loadSubjects(){
+     $scope.subjects = [];
+     classes.getSubjectsOfTeacher(model.id, function(data){
+       data.forEach(function(val,i,a){
+         $scope.subjects.push(val);
+       });
+     });
+   }
+   loadSubjects();
+   loadClasses();
+
+   $scope.subModal = {};
+   $scope.subs = [];
+   $scope.subject = {};
+   $scope.onChange = function(){
+     classes.getSubjectsLike($scope.subModal.nameModal,function(data){
+       $scope.subs = data;
+     });
+   }
+   $scope.onClickList = function(model){
+     $scope.modal.hide();
+     $scope.subModal.model = model;
+     $scope.subject.subjectName = model.subjectName;
+   }
+   $scope.addSubject = function(){
+     var obj ={
+       teacher:model.id,
+       subject:$scope.subModal.model.id,
+       class: $scope.subject.class.id
+     };
+     classes.createSubjectTeacher(obj, function(data){
+       loadSubjects();
+     });
+   }
+
+   $scope.showDeleteOption = function(subject) {
+
+   // Show the action sheet
+   var hideSheet = $ionicActionSheet.show({
+     buttons: [
+     ],
+     destructiveText: 'Delete',
+     titleText: 'Actions',
+     cancelText: 'Cancel',
+     cancel: function() {
+          // add cancel code..
+        },
+     buttonClicked: function(index) {
+       return true;
+     },
+     destructiveButtonClicked: function(index){
+       classes.removeSubjectTeacher(subject.id,function(res){
+         loadSubjects();
+         return true;
+       });
+     }
+   });
+
+   // For example's sake, hide the sheet after two seconds
+   $timeout(function() {
+     hideSheet();
+   }, 4000);
+
+  };
+
 })
 .controller('PlaylistsCtrl', function($scope) {
   $scope.playlists = [

@@ -1,4 +1,4 @@
-<ion-view>
+<ion-view view-title="Login" hide-back-button="true" hide-nav-bar="true">
   <ion-header-bar>
     <h1 class="title">Login</h1>
     <div class="buttons">
@@ -23,9 +23,12 @@
         <label class="item">
           <button class="button button-block button-positive" type="submit">Log in</button>
         </label>
+        <label class="item">
+        <a item class="button button-block button-positive" ui-sref="app.signup">Sign Up</a>
+        </label>
       </div>
     </form>
     <!--Sign up button-->
-    <a item class="button button-block button-positive" ui-sref="app.signup">Sign Up</a>
+
   </ion-content>
 </ion-modal-view>

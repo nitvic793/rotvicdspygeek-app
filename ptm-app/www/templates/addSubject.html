@@ -1,0 +1,26 @@
+<ion-view view-title="Student Review">
+  <ion-content>
+  <div class="list padding">
+	  <label class="item item-input">
+	    <input type="text" placeholder="SubjectName" ng-model="subject.subjectName" ng-click="modal.show()">
+	  </label>
+    <label class="item item-input item-select">
+        <div class="input-label">
+          Class
+        </div>
+        <select ng-model="subject.class" ng-options="cl.standard + ' ' + cl.section for cl in cls">
+        </select>
+    </label>
+	  <button class="button button-full button-positive" ng-click="addSubject()">Add Subject</button>
+  </div>
+  <div class="item item-divider">
+    My Subjects
+  </div>
+  <ion-list>
+  <ion-item ng-repeat="sub in subjects" ng-click="showDeleteOption(sub)">
+      {{sub.subject.subjectName}}
+      <span class="item-note"><strong>Class</strong> <i>{{sub.class.standard}} {{sub.class.section}}</i></span>
+   </ion-item>
+ </ion-list>
+  </ion-content>
+</ion-view>
