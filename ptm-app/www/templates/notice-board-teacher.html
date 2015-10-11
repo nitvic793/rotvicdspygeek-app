@@ -1,7 +1,7 @@
 <ion-view view-title="Notice Board" ng-controller="NoticeBoardCtrl" hide-back-button="true">
-  
-<ion-nav-buttons side="right">
-       <button class="button button-icon ion-compose" ng-click="noticeModal.show()" ng-hide="modalShow"></button>
+  <ion-nav-buttons side="right">
+       <button class="button button-icon ion-compose" ng-click="noticeModal.show()" ng-show="modalShow"></button>
+      <button class="button button-icon ion-loop" ng-click="refresh()"></button>
     </ion-nav-buttons>
   <ion-content>
  <!-- <div class="buttons">-->

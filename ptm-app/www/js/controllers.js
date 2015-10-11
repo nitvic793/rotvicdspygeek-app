@@ -20,7 +20,7 @@ function isCurrentUserAParent(sessionService){
 
 angular.module('starter.controllers', ['ionic', 'starter.config','starter.services'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService, school, student) {
+.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService, school, student, classes) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -79,7 +79,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     var loginUrl = urlConfig.backend+"auth";
     $http.post(loginUrl,$scope.loginData)
     .error(function(data, status, headers, config) {
-      $scope.showAlert('Invalid Username/Password');
+      console.log(data,status,headers,config);
+      $scope.showAlert('Invalid Username/Password: ' + data.err);
     })
     .then(function(res){
       console.log(res);
@@ -89,13 +90,25 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           sessionService.store("wards", data);
           $scope.isParent = true;
           console.log(data);
-          $state.go('app.browse',  {}, {reload: true});
+          if(!data || data.length==0){
+            $state.go('app.addWard');
+          }
+          else{
+            $state.go('app.browse');
+          }
         });
 
       }
       else {
-        $scope.isParent = false;
-        $state.go('app.browse',  {}, {reload: true});
+        classes.getSubjectsOfTeacher(res.data.model.id, function(data){
+          $scope.isParent = false;
+          if(!data || data.length==0){
+            $state.go('app.addSubject');
+          }
+          else{
+            $state.go('app.browse');
+          }
+        });
       }
 
     });
@@ -275,33 +288,52 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //$scope.chat = Chats.get($stateParams.chatId);
 })
 
-.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal, sessionService, classes){
+.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal, sessionService, classes, student){
   var userType = sessionService.get("loginData").userType;
+  var model = sessionService.get("loginData").model;
   var ward;
-  if(userType=='Parent'){
-    ward = sessionService.get("wards")[0].student;
-  }
+  var wards = [];
+
   $scope.cls = [];
   $scope.notices = [];
-  $scope.modalShow = false;
+  $scope.modalShow = true;
+  if(userType=='Parent'){
+    $scope.modalShow = false;
+    wards = sessionService.get("wards");
+    if(wards.length==0){
+    student.getWardsOfParent(model,function(data){
+      wards = data;
+    //  updateNoticeBoard();
+      });
+    }
+    else{
+    //  updateNoticeBoard();
+    }
+  }
   classes.getAllClasses(function(cls)
   {
     $scope.cls = cls;
   });
   function updateNoticeBoard()
   {
+    $scope.notices = [];
+    userType = sessionService.get("loginData").userType;
+    model = sessionService.get("loginData").model;
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
         $scope.notices = notices;
       });
     }
     else {
-      noticeBoard.getNoticesOfClass(ward.class,function(notices){
-        $scope.notices = notices;
+      wards.forEach(function(val,i,a){
+        noticeBoard.getNoticesOfClass(val.student.class,function(notices){
+          Array.prototype.push.apply($scope.notices,notices);
+        });
       });
     }
   }
-  updateNoticeBoard();
+  $scope.refresh = updateNoticeBoard;
+  //updateNoticeBoard();
 
   $ionicModal.fromTemplateUrl('templates/modal.html', {
     scope: $scope
@@ -317,7 +349,21 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
   $scope.$on('$ionicView.enter', function(e) {
-    updateNoticeBoard();
+    if(userType=='Parent'){
+      wards = sessionService.get("wards");
+      if(wards.length==0){
+      student.getWardsOfParent(model,function(data){
+        wards = data;
+        updateNoticeBoard();
+        });
+      }
+      else{
+        updateNoticeBoard();
+      }
+    }
+    else {
+      updateNoticeBoard();
+    }
   });
 })
 
@@ -334,11 +380,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      animation: 'slide-in-up'
    });
    var myId = sessionService.get("loginData").model.id;
-   teachers.getTeacherReviews(myId, function(data){
-     $scope.reviews = data;
-     console.log("Reviews",data);
-   });
-
+   function updateReviews(){
+     teachers.getTeacherReviews(myId, function(data){
+       $scope.reviews = data;
+       console.log("Reviews",data);
+     });
+   }
+   updateReviews();
    $scope.showAlert = function(message) {
      var alertPopup = $ionicPopup.alert({
        title: 'Message',
@@ -368,7 +416,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
        review: $scope.review.comments
      };
      if($scope.review.model){
-       teachers.postReview(obj);
+       teachers.postReview(obj, function(data){
+            updateReviews();
+       });
      }
      else {
        $scope.showAlert("Invalid student name entered!");
@@ -465,21 +515,45 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
 })
-.controller('LogoutCtrl', function($scope, $stateParams,$state, sessionService) {
+.controller('LogoutCtrl', function($scope, $stateParams, $ionicHistory, $state, sessionService) {
   sessionService.destroy("loginData");
+  $ionicHistory.nextViewOptions({
+            disableBack: true
+        });
   $state.go("app.login");
 })
 .controller('AddWardCtrl', function($scope, $stateParams, $ionicModal, student, sessionService) {
   $scope.review = {};
   $scope.wards = [];
   $scope.studs = [];
+  $scope.myWard = {};
   model = sessionService.get("loginData").model;
-  student.getWardsOfParent(model,function(data){
-    console.log(data);
-    data.forEach(function(val,i,a){
-      $scope.wards.push(val);
+  $scope.hideNavBar = true;
+  $scope.hideBackButton = true;
+
+  function checkWard(){
+    if($scope.wards.length>0){
+      $scope.hideNavBar = false;
+      $scope.hideBackButton = false;
+    }
+    else {
+       console.log("Test");
+        $scope.showAlert("Please add a ward to continue.");
+    }
+  }
+
+  function loadWards(){
+    $scope.wards = [];
+    student.getWardsOfParent(model,function(data){
+      console.log(data);
+      data.forEach(function(val,i,a){
+        $scope.wards.push(val);
+        checkWard();
+      });
     });
-  });
+  }
+  loadWards();
+  checkWard();
   $scope.onChange = function(){
     student.getStudentsLike($scope.review.studentNameModal,function(data){
       $scope.studs = data;
@@ -487,8 +561,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
   $scope.onClickList = function(model){
     $scope.modal.hide();
-    $scope.review.model = model;
-    $scope.review.studentName = model.firstName + ' ' + model.lastName;
+    $scope.myWard.model = model;
+    $scope.myWard.studentName = model.firstName + ' ' + model.lastName;
   }
 
   $ionicModal.fromTemplateUrl('templates/studentListView.html', function(modal) {
@@ -497,12 +571,35 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      scope: $scope,
      animation: 'slide-in-up'
    });
+
+   $scope.addWard = function(){
+     var obj = {
+       parent:sessionService.get("loginData").model.id,
+       student: $scope.myWard.model.id,
+       type:"Parent"
+     };
+     student.addParent(obj, function(data){
+       console.log(data);
+       loadWards();
+     });
+   }
 })
 .controller('SettingsCtrl', function($scope, $stateParams, sessionService) {
   $scope.isParent = isCurrentUserAParent(sessionService);
   console.log($scope.isParent);
 })
 .controller('AddSubjectCtrl', function($scope, $stateParams,$ionicModal, $ionicActionSheet, $timeout,sessionService, student, classes) {
+  $scope.hideNavBar = true;
+  $scope.hideBackButton = true;
+  function checkSubjects(){
+    if($scope.subjects.length>0){
+      $scope.hideNavBar = false;
+      $scope.hideBackButton = false;
+    }
+    else {
+      $scope.showAlert("Please add a subject to continue.");
+    }
+  }
   $ionicModal.fromTemplateUrl('templates/subjectModal.html', function(modal) {
      $scope.modal = modal;
    }, {
@@ -511,24 +608,24 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
    });
    model = sessionService.get("loginData").model;
    $scope.subjects = [];
-
    function loadClasses(){
      $scope.cls = [];
      classes.getAllClasses(function(cls) {
        $scope.cls = cls;
      });
    }
-
    function loadSubjects(){
      $scope.subjects = [];
      classes.getSubjectsOfTeacher(model.id, function(data){
        data.forEach(function(val,i,a){
          $scope.subjects.push(val);
+         checkSubjects();
        });
      });
    }
    loadSubjects();
    loadClasses();
+   checkSubjects();
 
    $scope.subModal = {};
    $scope.subs = [];
@@ -551,6 +648,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      };
      classes.createSubjectTeacher(obj, function(data){
        loadSubjects();
+       checkSubjects();
      });
    }
 

@@ -210,14 +210,16 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       getUrl = urlConfig.backend + "studentreview?sort=createdAt DESC&teacher="+teacherId;
       genericGetAll($http, getUrl, callback);
     },
-    postReview: function(review){
+    postReview: function(review, callback){
       createUrl = urlConfig.backend + "studentreview/create";
       $http.post(createUrl,review)
       .error(function(data, status, headers, config) {
         console.log("Error in posting review!");
+        callback(data);
       })
       .then(function(res){
         console.log('Review posted! '+ res.data);
+        callback(res.data);
       });
     }
   };
@@ -262,6 +264,19 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     getWardReviews: function(ward, callback){
       var reviewUrl = urlConfig.backend+"studentreview/?sort=createdAt DESC&student="+ward.id;
       genericGetAll($http,reviewUrl,callback);
+    },
+    addParent : function(wardRelation, callback){
+      var createUrl = urlConfig.backend + "wardrelation/create";
+      $http.post(createUrl,wardRelation)
+        .error(function(data, status, headers, config) {
+          console.log("Error in creating relation!");
+          callback(data);
+        })
+        .then(function(res){
+          console.log('Review posted! '+ res.data);
+          callback(res.data)
+        });
+      }
     }
-  };
+
 });
