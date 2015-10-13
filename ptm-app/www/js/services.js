@@ -105,8 +105,20 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   return {
     getAll: function(callback) {
       genericGetAll($http, url, callback);
+    },
+    update: function(who,model,errCb,successCb){
+      updateUrl = urlConfig.backend+who+"/update/"+model.id;
+      $http.post(updateUrl,model)
+        .error(function(data, status, headers, config) {
+          console.log("Error in update");
+          errCb();
+        })
+        .then(function(res){
+          console.log('Updated! '+ res.data);
+          successCb();
+        });
+      }
     }
-  }
 })
 
 .factory('noticeBoard', function($http, urlConfig, sessionService){

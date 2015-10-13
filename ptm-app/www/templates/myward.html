@@ -1,5 +1,10 @@
 <ion-view view-title="My Ward">
   <ion-content>
+    <ion-list>
+      <ion-item ng-repeat="w in wards" ng-click="getReviews(w)">
+        {{w.student.firstName}} {{w.student.lastName}}
+      </ion-item>
+    </ion-list>
     <div class="card" ng-repeat="review in reviews">
       <div class="item item-divider">
        {{review.teacher.firstname}} {{review.teacher.lastname}}

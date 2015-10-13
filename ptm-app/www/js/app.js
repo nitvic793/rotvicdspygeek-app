@@ -82,7 +82,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     url: '/set-office-hours',
     views: {
       'menuContent': {
-        templateUrl: 'templates/set-office-hours.html'
+        templateUrl: 'templates/set-office-hours.html',
+        controller:'OfficeHoursCtrl'
       }
     }
   })

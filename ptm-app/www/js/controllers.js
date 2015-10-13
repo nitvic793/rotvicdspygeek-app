@@ -18,9 +18,49 @@ function isCurrentUserAParent(sessionService){
   return sessionService.get("loginData").userType=="Parent";
 }
 
-angular.module('starter.controllers', ['ionic', 'starter.config','starter.services'])
+function isOfficeHours(settings){
+  settings.fromTime = new Date(settings.fromTime);
+  settings.toTime = new Date(settings.toTime);
+  cur = new Date();
+  var currentTime = new Date(new Date(1970,0,1,cur.getHours(),cur.getMinutes(),cur.getSeconds(),cur.getMilliseconds()).getTime());
+  if(settings.toTime<settings.fromTime){
+    settings.toTime.setDate(settings.toTime.getDate()+1);
+  }
+  var isItTime = (currentTime>settings.fromTime && currentTime<settings.toTime);
+  var c = currentTime;
+  var f = settings.fromTime;
+  var t = settings.toTime;
+  isItTime = (c.getHours()>f.getHours() && c.getHours()<t.getHours()) && (c.getMinutes()>f.getMinutes() && c.getMinutes()<t.getMinutes());
+  switch (new Date().getDay()) {
+    case 0:
+      return settings.sunday && isItTime;
+      break;
+    case 1:
+      return settings.monday && isItTime;
+      break;
+    case 2:
+      return settings.tuesday && isItTime;
+      break;
+    case 3:
+      return settings.wednesday && isItTime;
+      break;
+    case 4:
+      return settings.thursday && isItTime;
+      break;
+    case 5:
+      return settings.friday && isItTime;
+      break;
+    case 6:
+      return settings.saturday && isItTime;
+      break;
+    default:
+      return false;
+  }
+}
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout,$state, $http, urlConfig, sessionService, school, student, classes) {
+angular.module('starter.controllers', ['ionic', 'starter.config','starter.services', 'ngCordova'])
+
+.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -28,6 +68,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   // listen for the $ionicView.enter event:
   //$scope.$on('$ionicView.enter', function(e) {
   //});
+  $scope.officeHours = false;
   $scope.schools = [];
   school.getAll(function(data){
     console.log(data);
@@ -75,6 +116,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
   // Perform the login action when the user submits the login form
   $scope.doLogin = function() {
+    $ionicHistory.nextViewOptions({
+              disableBack: true
+          });
     console.log('Doing login', $scope.loginData);
     var loginUrl = urlConfig.backend+"auth";
     $http.post(loginUrl,$scope.loginData)
@@ -85,11 +129,15 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     .then(function(res){
       console.log(res);
       sessionService.store("loginData",res.data);
+      if(res.data.model.settings && isOfficeHours(res.data.model.settings)){
+        $scope.officeHours = true;
+      }
       if(res.data.userType=="Parent"){
         student.getWardsOfParent(res.data.model,function(data){
           sessionService.store("wards", data);
           $scope.isParent = true;
           console.log(data);
+
           if(!data || data.length==0){
             $state.go('app.addWard');
           }
@@ -163,7 +211,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   };
 })
 
-.controller('ChatsCtrl', function($scope, Chats, sessionService, classes, teachers, student) {
+.controller('ChatsCtrl', function($scope, Chats, sessionService, classes, teachers, student, $ionicLoading) {
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
   // To listen for when this page is active (for example, to refresh data),
@@ -173,33 +221,48 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //});
   var userType = sessionService.get("loginData").userType;
   var ward;
-
+  function getChatItems(wards){
+    console.log(wards);
+    wards.forEach(function(val,i,a){
+      classes.getTeachersOfClass(val.student.class, function(data){
+        for(i=0;i<data.length;++i){
+          name = data[i].teacher.firstname+' '+data[i].teacher.lastname;
+          subject = data[i].subject.subjectname;
+          $scope.chatItems[i] = {
+            id:data[i].teacher.id,
+            name:name,
+            subject: subject
+          };
+        }
+      });
+    });
+  }
   $scope.chatItems = [];
   if(userType=='Parent'){
-    ward = sessionService.get("wards")[0].student;
-    var wardClass = ward.class;
-    classes.getTeachersOfClass(wardClass, function(data){
-      for(i=0;i<data.length;++i){
-        name = data[i].teacher.firstname+' '+data[i].teacher.lastname;
-        subject = data[i].subject.subjectname;
-        $scope.chatItems[i] = {
-          id:data[i].teacher.id,
-          name:name,
-          subject: subject
-        };
-      }
-    });
+    var wards = sessionService.get("wards");
+    if(!wards){
+        student.getWardsOfParent(sessionService.get("loginData").model.id, function(data){
+          sessionService.set("wards",data);
+          getChatItems(data);
+        });
+    }
+    else{
+      getChatItems(wards);
+    }
+
   }
   else {
     var loginData = sessionService.get("loginData");
     var user = loginData.model;
     var teacherId = loginData.model.id;
     teachers.getAllClassesOfTeacher(teacherId, function(data){
+      $ionicLoading.show();
       data.forEach(function(element,index,array){
         classId = element.class.id;
         student.getStudentsOfClass(classId, function(students){
           students.forEach(function(val,i,a){
             student.getWardDataOfStudent(val.id,function(wards){
+              $ionicLoading.hide();
               wards.forEach(function(ward,ind,arr){
                 console.log(ward);
                 name = ward.parent.firstname + ' ' + ward.parent.lastname;
@@ -288,11 +351,66 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //$scope.chat = Chats.get($stateParams.chatId);
 })
 
-.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal, sessionService, classes, student){
+.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, sessionService, classes, student, urlConfig){
   var userType = sessionService.get("loginData").userType;
   var model = sessionService.get("loginData").model;
   var ward;
   var wards = [];
+  $scope.images = [];
+  function upload(fileURL){
+    var win = function (r) {
+    console.log("Code = " + r.responseCode);
+    console.log("Response = " + r.response);
+    console.log("Sent = " + r.bytesSent);
+    }
+
+    var fail = function (error) {
+      alert("An error has occurred: Code = " + error.code);
+      console.log("upload error source " + error.source);
+      console.log("upload error target " + error.target);
+    }
+
+    var options = new FileUploadOptions();
+    options.fileKey = "image";
+    options.fileName = fileURL.substr(fileURL.lastIndexOf('/') + 1);
+
+    var params = {};
+    params.value1 = "test";
+    params.value2 = "param";
+
+    options.params = params;
+
+    var ft = new FileTransfer();
+    ft.upload(fileURL, encodeURI(urlConfig.backend+"image/upload"), win, fail, options);
+  }
+  $scope.uploadImage = function(){
+    window.imagePicker.getPictures(
+			function(results) {
+				for (var i = 0; i < results.length; i++) {
+					console.log('Image URI: ' + results[i]);
+					$scope.images.push(results[i]);
+          upload(results[i]);
+				}
+				if(!$scope.$$phase) {
+					$scope.$apply();
+				}
+			}, function (error) {
+				console.log('Error: ' + error);
+        $scope.showAlert(error);
+			}
+		);
+    // navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
+    //     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+    //     destinationType: Camera.DestinationType.FILE_URI });
+    //
+    // function onSuccess(imageURI) {
+    //    $scope.showAlert(imageURI);
+    // }
+    //
+    // function onFail(message) {
+    //     $scope.showAlert('Failed because: ' + message);
+    // }
+  }
 
   $scope.cls = [];
   $scope.notices = [];
@@ -314,20 +432,22 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   {
     $scope.cls = cls;
   });
-  function updateNoticeBoard()
-  {
+  function updateNoticeBoard(){
+    $ionicLoading.show();
     $scope.notices = [];
     userType = sessionService.get("loginData").userType;
     model = sessionService.get("loginData").model;
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
         $scope.notices = notices;
+        $ionicLoading.hide();
       });
     }
     else {
       wards.forEach(function(val,i,a){
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
           Array.prototype.push.apply($scope.notices,notices);
+          $ionicLoading.hide();
         });
       });
     }
@@ -428,14 +548,29 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 .controller('MyWardCtrl', function($scope, $state, $ionicModal, sessionService, student) {
   var userType = sessionService.get("loginData").userType;
-  var ward;
+  $scope.wards = [];
   $scope.reviews = [];
-  if(userType=='Parent'){
-    ward = sessionService.get("wards")[0].student;
+  $scope.getReviews = function(ward){
+    student.getWardReviews(ward.student,function(data){
+      $scope.reviews = data;
+    });
   }
-  student.getWardReviews(ward,function(data){
-    $scope.reviews = data;
-  });
+
+  if(userType=='Parent'){
+    var wards = sessionService.get("wards");
+    if(wards.length==0){
+      student.getWardsOfParent(sessionService.get("loginData").model,function(data){
+        $scope.wards = data;
+        $scope.getReviews(data[0]);
+      });
+    }
+    else{
+      $scope.wards = wards;
+      $scope.getReviews(wards[0]);
+    }
+
+  }
+
 })
 .controller('ProfileCtrl', function($scope, sessionService) {
   currentUser = sessionService.get("loginData");
@@ -586,7 +721,12 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 })
 .controller('SettingsCtrl', function($scope, $stateParams, sessionService) {
   $scope.isParent = isCurrentUserAParent(sessionService);
-  console.log($scope.isParent);
+  settings = sessionService.get("loginData").model.settings;
+  if(settings && isOfficeHours(settings)){
+    $scope.officeHours = true;
+  }
+  console.log($scope.officeHours);
+
 })
 .controller('AddSubjectCtrl', function($scope, $stateParams,$ionicModal, $ionicActionSheet, $timeout,sessionService, student, classes) {
   $scope.hideNavBar = true;
@@ -682,6 +822,40 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
   };
 
+})
+.controller('OfficeHoursCtrl', function($scope, $stateParams, school, sessionService) {
+  $scope.settings = {
+    fromTime:new Date(1970, 0, 1, 9, 00, 0),
+    toTime: new Date(1970, 0, 1, 18, 00, 0)
+  };
+  model = sessionService.get("loginData").model;
+  console.log(model.settings);
+
+  if(model.settings){
+    isOfficeHours(model.settings);
+    $scope.settings = model.settings;
+    $scope.settings.fromTime = new Date(model.settings.fromTime);
+    $scope.settings.toTime = new Date(model.settings.toTime);
+  }
+  $scope.save = function(){
+    $scope.settings.fromTime = new Date($scope.settings.fromTime);
+    $scope.settings.toTime = new Date($scope.settings.toTime);
+    user = (sessionService.get("loginData").userType=="Parent")?"parents":"teachers";
+    model.settings = $scope.settings;
+    school.update(user,model,function(){
+      $scope.showAlert("Could not update");
+    },
+    function(data){
+      $scope.showAlert("Settings Saved");
+      session = sessionService.get("loginData");
+      session.model = model;
+      sessionService.store("loginData",session);
+      if(isOfficeHours(model.settings)){
+        $scope.officeHours = true;
+      }
+    });
+    console.log(model);
+  }
 })
 .controller('PlaylistsCtrl', function($scope) {
   $scope.playlists = [

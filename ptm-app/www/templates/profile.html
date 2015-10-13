@@ -2,15 +2,15 @@
   <ion-content>
     <div class="list">
 	  <label class="item item-input">
-	    <input type="text" placeholder="Name" ng-value="user.firstname + ' ' + user.lastname">
+	    <input type="text" placeholder="Name" ng-value="user.firstname + ' ' + user.lastname" disabled>
 	  </label>
 	  <label class="item item-input">
-	    <input type="email" placeholder="Email" ng-value="user.email">
+	    <input type="email" placeholder="Email" ng-value="user.email" disabled>
 	  </label>
 	  <!--This select should be available only in the parent version. Teacher side of the app should be greyed out -->
 	</div>
 	<label class="item item-select">
-    <select ng-model="userType.value" ng-options="v for v in userType.values">
+    <select ng-model="userType.value" ng-options="v for v in userType.values" disabled>
     </select>
 		</label>
   </ion-content>
