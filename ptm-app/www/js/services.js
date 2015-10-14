@@ -126,21 +126,24 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   var url = urlConfig.backend+"noticeboard";
   var createUrl = urlConfig.backend+"noticeboard/create";
   return {
-    postNotice: function(message){
+    postNotice: function(message,errCb,successCb){
       var user = sessionService.get("loginData");
       var classId = message.forClass.id;
       var notice = {
         teacher: user.model.id,
         class: classId,
         message: message.message,
-        time: new Date()
+        time: new Date(),
+        images:message.images
       };
       $http.post(createUrl,notice)
       .error(function(data, status, headers, config) {
         console.log("Error in notice posting!");
+        errCb(data);
       })
       .then(function(res){
         console.log('Notice posted! '+ res.data);
+        successCb();
       });
     },
     getAllNotices : function (callback) {
@@ -242,6 +245,15 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
   return {
     getParent: function (id,callback) {
       var getUrl = url+"/"+id;
+      genericGetAll($http, getUrl, callback);
+    }
+  };
+})
+.factory('images', function($http, urlConfig){
+  var url = urlConfig.backend+"image";
+  return {
+    getImage: function (name,callback) {
+      var getUrl = url+"?name="+name;
       genericGetAll($http, getUrl, callback);
     }
   };

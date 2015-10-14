@@ -1,3 +1,4 @@
+
 <ion-view view-title="Notice Board" ng-controller="NoticeBoardCtrl" hide-back-button="true">
   <ion-nav-buttons side="right">
        <button class="button button-icon ion-compose" ng-click="noticeModal.show()" ng-show="modalShow"></button>
@@ -11,6 +12,10 @@
   <div class="card" ng-repeat="notice in notices">
 	  <div class="item item-body">
       {{notice.message}}
+      <ion-scroll direction="x">
+            <img ng-repeat="image in notice.images" ng-src="{{image.url}}" class="image-list-thumb" style="padding: 4px 4px 4px 2px;
+            height: 100px;" ng-click="showImages(notice,$index)"/>
+      </ion-scroll>
 	  </div>
     <div class="item">
     <h4>{{notice.teacher.firstname}} {{notice.teacher.lastname}}</h4>

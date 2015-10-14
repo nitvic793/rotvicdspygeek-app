@@ -68,6 +68,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   // listen for the $ionicView.enter event:
   //$scope.$on('$ionicView.enter', function(e) {
   //});
+  $scope.toggleDrag = false;
   $scope.officeHours = false;
   $scope.schools = [];
   school.getAll(function(data){
@@ -127,6 +128,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $scope.showAlert('Invalid Username/Password: ' + data.err);
     })
     .then(function(res){
+      $scope.toggleDrag = true;
       console.log(res);
       sessionService.store("loginData",res.data);
       if(res.data.model.settings && isOfficeHours(res.data.model.settings)){
@@ -351,20 +353,50 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //$scope.chat = Chats.get($stateParams.chatId);
 })
 
-.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, sessionService, classes, student, urlConfig){
+.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, sessionService, classes, student, urlConfig, images){
   var userType = sessionService.get("loginData").userType;
   var model = sessionService.get("loginData").model;
   var ward;
   var wards = [];
   $scope.images = [];
+  $scope.noticeImages = [];
+  $scope.imageFiles = [];
+
+  $scope.showImages = function(notice,index) {
+   $scope.activeSlide = index;
+   $scope.showModal('templates/imageModal.html', notice);
+  }
+
+   $scope.showModal = function(templateUrl, notice) {
+     $scope.notice = notice;
+     $ionicModal.fromTemplateUrl(templateUrl, {
+       scope: $scope,
+       animation: 'slide-in-up'
+     }).then(function(modal) {
+       $scope.modal = modal;
+       $scope.modal.show();
+     });
+   }
+
+   // Close the modal
+   $scope.closeModal = function() {
+     $scope.modal.hide();
+     $scope.modal.remove()
+   };
+
   function upload(fileURL){
     var win = function (r) {
+      $ionicLoading.hide();
+      var response = JSON.parse(r.response);
+      var fileName = response.files[0].filename;
+      $scope.imageFiles.push(fileName);
     console.log("Code = " + r.responseCode);
     console.log("Response = " + r.response);
     console.log("Sent = " + r.bytesSent);
     }
 
     var fail = function (error) {
+      $ionicLoading.hide();
       alert("An error has occurred: Code = " + error.code);
       console.log("upload error source " + error.source);
       console.log("upload error target " + error.target);
@@ -384,6 +416,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     ft.upload(fileURL, encodeURI(urlConfig.backend+"image/upload"), win, fail, options);
   }
   $scope.uploadImage = function(){
+    $ionicLoading.show();
     window.imagePicker.getPictures(
 			function(results) {
 				for (var i = 0; i < results.length; i++) {
@@ -397,7 +430,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 			}, function (error) {
 				console.log('Error: ' + error);
         $scope.showAlert(error);
-			}
+			},
+      {
+        maximumImagesCount: 3,
+        width: 600,
+        height: 600,
+        quality: 50
+      }
 		);
     // navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
     //     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
@@ -432,14 +471,28 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   {
     $scope.cls = cls;
   });
+  function getImages(notices){
+    notices.forEach(function(val,i,a){
+      if(val.images){
+        val.images.forEach(function(im,index,arr){
+          images.getImage(im,function(data){
+            val.images[index] = data[0];
+          });
+        });
+      }
+    });
+  }
   function updateNoticeBoard(){
     $ionicLoading.show();
     $scope.notices = [];
+    $scope.noticeImages = [];
     userType = sessionService.get("loginData").userType;
     model = sessionService.get("loginData").model;
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
         $scope.notices = notices;
+        getImages($scope.notices);
+        console.log($scope.notices);
         $ionicLoading.hide();
       });
     }
@@ -447,6 +500,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       wards.forEach(function(val,i,a){
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
           Array.prototype.push.apply($scope.notices,notices);
+          getImages($scope.notices);
           $ionicLoading.hide();
         });
       });
@@ -462,10 +516,17 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   })
 
   $scope.postMessage = function(announcement) {
+    announcement.images = $scope.imageFiles;
     console.log(announcement);
-    noticeBoard.postNotice(announcement);
-    updateNoticeBoard();
-    $scope.noticeModal.hide();
+    $ionicLoading.show();
+    noticeBoard.postNotice(announcement, function(err){
+      $scope.showAlert(err);
+      $ionicLoading.hide();
+    }, function(){
+      updateNoticeBoard();
+      $ionicLoading.hide();
+      $scope.noticeModal.hide();
+    });
   }
 
   $scope.$on('$ionicView.enter', function(e) {
