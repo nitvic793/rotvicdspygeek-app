@@ -1,4 +1,4 @@
-<ion-view view-title="Sign Up" hide-nav-bar="true">
+<ion-view view-title="Sign Up" hide-nav-bar="false">
   <ion-header-bar>
     <h1 class="title">Sign Up</h1>
     <!-- <div class="buttons">
@@ -10,33 +10,33 @@
     	<div class="list">
         <label class="item item-input">
           <span class="input-label">First Name</span>
-          <input type="text" ng-model="signUpData.firstname">
+          <input type="text" ng-model="signUpData.firstname" required="required">
         </label>
         <label class="item item-input">
           <span class="input-label">Last Name</span>
-          <input type="text" ng-model="signUpData.lastname">
+          <input type="text" ng-model="signUpData.lastname" required="required">
         </label>
         <label class="item item-input">
           <span class="input-label">Enrollment Number</span>
-          <input type="text" id="enrollmentNumber" ng-model="signUpData.registrationNo">
+          <input type="text" id="enrollmentNumber" ng-model="signUpData.registrationNo" required="required">
         </label>
         <label class="item item-input">
           <span class="input-label">Email</span>
-          <input type="text" ng-model="signUpData.email">
+          <input type="email" ng-model="signUpData.email" required="required">
         </label>
         <label class="item item-input">
           <span class="input-label">Password</span>
-          <input type="password" ng-model="signUpData.password">
+          <input type="password" ng-model="signUpData.password" required="required">
         </label>
         <label class="item item-input">
           <span class="input-label">Confirm Password</span>
-          <input type="password" ng-model="signUpData.confirmPassword">
+          <input type="password" ng-model="signUpData.confirmPassword" required="required">
         </label>
         <label class="item item-input item-select">
             <div class="input-label">
              School
             </div>
-            <select ng-model="signUpData.school" ng-options="school.schoolName for school in schools">
+            <select ng-model="signUpData.school" ng-options="school.schoolName for school in schools" required="required">
             </select>
         </label>
         <label class="item">

@@ -30,3 +30,29 @@
     width: 100%;
     height: 100%;
 }
+.my-menu {
+  background-color:#0F0F0F;
+}
+.my-menu .scroll {
+  background-color:#0F0F0F;
+}
+
+.my-menu .list {
+  background-color: #0F0F0F;
+}
+
+.my-menu .item, .my-menu .item-content, .my-menu .item-complex{
+  background-color: #0F0F0F;
+  color: #FFFFFF;
+  border-color: rgba(0,0,0,0);
+  border-style: groove;
+  border-bottom-color: #8C8C8C;
+  border-width: 0.07em;
+}
+@font-face {
+    font-family: OpenSans;
+    src: url("open-sans.light.ttf");
+}
+body{
+  font-family: OpenSans;
+}

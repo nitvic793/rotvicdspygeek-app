@@ -10,11 +10,11 @@
       <div class="list">
         <label class="item item-input">
           <span class="input-label">Email</span>
-          <input type="text" ng-model="loginData.email">
+          <input type="email" ng-model="loginData.email" required>
         </label>
         <label class="item item-input">
           <span class="input-label">Password</span>
-          <input type="password" ng-model="loginData.password">
+          <input type="password" ng-model="loginData.password" required="required">
         </label>
         <label class="item">
         	<ion-radio ng-model="loginData.userType" ng-value="'Teacher'">Teacher</ion-radio>

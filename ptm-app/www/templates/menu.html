@@ -12,32 +12,32 @@
     <ion-nav-view name="menuContent"></ion-nav-view>
   </ion-side-menu-content>
 
-  <ion-side-menu side="left">
-    <ion-header-bar class="bar-stable">
+  <ion-side-menu side="left" >
+    <!-- <ion-header-bar class="bar-stable">
       <h1 class="title">Sling</h1>
-    </ion-header-bar>
-    <ion-content>
-      <ion-list>
+    </ion-header-bar> -->
+    <ion-content class="my-menu">
+      <ion-list class="my-menu">
         <!--<ion-item menu-close ng-click="login()">
           Login
         </ion-item>-->
         <ion-item menu-close href="#/app/browse">
-          Notice Board
+          NOTICE BOARD
         </ion-item>
         <ion-item menu-close href="#/app/chats">
-          Chat
+          CHAT
         </ion-item>
         <ion-item menu-close href="#/app/student-review" ng-hide="isParent">
-          Student Review
+          STUDENT REVIEW
         </ion-item>
         <ion-item menu-close href="#/app/my-ward" ng-show="isParent">
-          My Ward
+          MY WARD
         </ion-item>
         <ion-item menu-close href="#/app/settings">
-          Settings
+          SETTINGS
         </ion-item>
         <ion-item menu-close href="#/app/logout">
-          Logout
+          LOGOUT
         </ion-item>
       </ion-list>
     </ion-content>

@@ -696,7 +696,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 })
 .controller('MenuCtrl', function($scope, $stateParams, sessionService) {
-  $scope.isParent = false;
+  
   if(sessionService.get("loginData")!=null){
     $scope.isLoggedIn = true;
     if(sessionService.get("loginData").userType=="Parent"){
