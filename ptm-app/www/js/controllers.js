@@ -60,7 +60,7 @@ function isOfficeHours(settings){
 
 angular.module('starter.controllers', ['ionic', 'starter.config','starter.services', 'ngCordova'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
+.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -117,6 +117,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
   // Perform the login action when the user submits the login form
   $scope.doLogin = function() {
+    $ionicLoading.show();
     $ionicHistory.nextViewOptions({
               disableBack: true
           });
@@ -126,6 +127,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     .error(function(data, status, headers, config) {
       console.log(data,status,headers,config);
       $scope.showAlert('Invalid Username/Password: ' + data.err);
+      $ionicLoading.hide();
     })
     .then(function(res){
       $scope.toggleDrag = true;
@@ -146,8 +148,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           else{
             $state.go('app.browse');
           }
+          $ionicLoading.hide();
         });
-
       }
       else {
         classes.getSubjectsOfTeacher(res.data.model.id, function(data){
@@ -158,6 +160,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           else{
             $state.go('app.browse');
           }
+          $ionicLoading.hide();
         });
       }
 
@@ -183,6 +186,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
   //Logic for sign up
   $scope.doSignUp = function(form){
+    $ionicLoading.show();
     if(form.$valid)
     {
       var data = $scope.signUpData;
@@ -198,17 +202,26 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         createUrl =  urlConfig.backend+'teachers/create';
       }
       delete data.choice;
-      $http.post(createUrl,data).then(function(res) {
+      $http.post(createUrl,data)
+      .error(function(data, status, headers, config) {
+        console.log(data,status,headers,config);
+        $scope.showAlert("Oops, Error in signing you up!");
+        $ionicLoading.hide();
+      })
+      .then(function(res) {
         console.log(res);
         if(res.statusText=='Created'){
           $scope.showAlert("Sign up succesful!");
           $state.go('app.login');
         }
         else{
-          $scope.showAlert("Oops, Error in signing you up!")
+          $scope.showAlert("Oops, Error in signing you up!");
         }
+        $ionicLoading.hide();
       });
-
+    }
+    else{
+      $scope.showAlert("Please fill the sign up form with appropriate values");
     }
   };
 })
@@ -236,20 +249,22 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
             subject: subject
           };
         }
+        $ionicLoading.hide();
       });
     });
   }
   $scope.chatItems = [];
   if(userType=='Parent'){
+    $ionicLoading.show();
     var wards = sessionService.get("wards");
     if(!wards){
         student.getWardsOfParent(sessionService.get("loginData").model.id, function(data){
           sessionService.set("wards",data);
-          getChatItems(data);
+          getChatItems(data);          
         });
     }
     else{
-      getChatItems(wards);
+      getChatItems(wards);    
     }
 
   }
@@ -294,7 +309,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   $scope.messages = [];
   $scope.userData = {};
   $scope.myId = sessionService.get("loginData").model.id;
-  userId = $stateParams.chatId; //Get user Id of who we are going to chat with
+  var userId = $stateParams.chatId; //Get user Id of who we are going to chat with
   var teacherId,parentId;
   ///Retrieve user data of the person we are going to chat with. This depends on whether the current user is a parent or a teacher.
   if(userType=="Parent"){
