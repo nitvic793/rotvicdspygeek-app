@@ -2,9 +2,11 @@
 <ion-view view-title="Notice Board" ng-controller="NoticeBoardCtrl" hide-back-button="true">
   <ion-nav-buttons side="right">
        <button class="button button-icon ion-compose" ng-click="noticeModal.show()" ng-show="modalShow"></button>
-      <button class="button button-icon ion-loop" ng-click="refresh()"></button>
+      <!--<button class="button button-icon ion-loop" ng-click="refresh()"></button>-->
     </ion-nav-buttons>
   <ion-content>
+    <ion-refresher pulling-text="Pull to refresh" on-refresh="doRefresh()">
+    </ion-refresher>
  <!-- <div class="buttons">-->
 
 
@@ -18,10 +20,10 @@
     </div>
 	  <div class="item item-body">
       {{notice.message}}
-      <ion-scroll direction="x">
+      <div>
             <img ng-repeat="image in notice.images" ng-src="{{image.url}}" class="image-list-thumb" style="padding: 4px 4px 4px 2px;
             height: 100px;" ng-click="showImages(notice,$index)"/>
-      </ion-scroll>
+      </div>
 	  </div>
 
 	</div>
