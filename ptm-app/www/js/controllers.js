@@ -91,10 +91,30 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     choice:'Parent'
   };
   $scope.message = '';
+  $scope.showAlert = function(message) {
+    var alertPopup = $ionicPopup.alert({
+      title: 'Message',
+      template: message
+    });
+    alertPopup.then(function(res) {
+      console.log('Alert shown');
+    });
+  }
 
 
 })
-.controller('LoginCtrl', function($scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
+.controller('LoginCtrl', function($scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes, teachers, parents) {
+
+  var push = new Ionic.Push({
+    "debug": true,
+    "onNotification": function(notification) {
+      var payload = notification.payload;
+      console.log(notification, payload);
+    },
+    "onRegister": function(data) {
+      console.log(data.token);
+    }
+  });
 
   $ionicModal.fromTemplateUrl('templates/login.html', {
     scope: $scope
@@ -196,52 +216,68 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //Logic for sign up
   $scope.doSignUp = function(form){
     $ionicLoading.show();
-    if(form.$valid)
-    {
-      var data = $scope.signUpData;
-      var createUrl = '';
-      if($scope.signUpData.choice=='Parent')
+      if(form.$valid)
       {
-        createUrl =  urlConfig.backend+'parents/create';
-        if(data.registrationNo){
-          delete data.registrationNo;
+        var data = $scope.signUpData;
+        var createUrl = '';
+        var choice = $scope.signUpData.choice;
+        if($scope.signUpData.choice=='Parent')
+        {
+          createUrl =  urlConfig.backend+'parents/create';
+          if(data.registrationNo){
+            delete data.registrationNo;
+          }
         }
-      }
-      else {
-        createUrl =  urlConfig.backend+'teachers/create';
-      }
-      delete data.choice;
-      $http.post(createUrl,data)
-      .error(function(data, status, headers, config) {
-        console.log(data,status,headers,config);
-        $scope.showAlert("Oops, Error in signing you up!");
-        $ionicLoading.hide();
-      })
-      .then(function(res) {
-        console.log(res);
-        if(res.statusText=='Created'){
-          $scope.showAlert("Sign up succesful!");
-          $state.go('app.login');
+        else {
+          createUrl =  urlConfig.backend+'teachers/create';
         }
-        else{
+        delete data.choice;
+        $http.post(createUrl,data)
+        .error(function(data, status, headers, config) {
+          console.log(data,status,headers,config);
           $scope.showAlert("Oops, Error in signing you up!");
-        }
-        $ionicLoading.hide();
-      });
-    }
-    else{
-      $scope.showAlert("Please fill the sign up form with appropriate values");
-    }
+          $ionicLoading.hide();
+        })
+        .then(function(res) {
+          console.log(res);
+          if(res.statusText=='Created'){
+            $scope.showAlert("Sign up succesful!");
+            push.register(function(token){
+              obj = res.data;
+              console.log(obj.id.toString());
+              obj.pushToken = token.token;
+              if(choice=='Parent'){
+                parents.updateParent(obj,function(){
+                  console.log("Registered for push! " + token.token);
+                },
+                function(){
+                  console.log("Error in updating to DB");
+                });
+              }
+              else{
+                teachers.updateTeacher(obj,function(){
+                  console.log("Registered for push! " + token.token);
+                },
+                function(){
+                  console.log("Error in updating to DB");
+                });
+              }
+            });
+            $state.go('app.login');
+          }
+          else{
+            $scope.showAlert("Oops, Error in signing you up!");
+          }
+          $ionicLoading.hide();
+        });
+      }
+      else{
+        $scope.showAlert("Please fill the sign up form with appropriate values");
+      }
   };
+
 })
 .controller('ChatsCtrl', function($scope, Chats, sessionService, classes, teachers, student, $ionicLoading) {
-  // With the new view caching in Ionic, Controllers are only called
-  // when they are recreated or on app start, instead of every page change.
-  // To listen for when this page is active (for example, to refresh data),
-  // listen for the $ionicView.enter event:
-  //
-  //$scope.$on('$ionicView.enter', function(e) {
-  //});
   var userType = sessionService.get("loginData").userType;
   var ward;
   function getChatItems(wards){

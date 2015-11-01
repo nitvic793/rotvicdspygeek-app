@@ -236,8 +236,20 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
         console.log('Review posted! '+ res.data);
         callback(res.data);
       });
-    }
-  };
+    },
+    updateTeacher : function(model, success, error){
+      updateUrl = url+"/update/"+model.id;
+      $http.post(updateUrl,model)
+        .error(function(data, status, headers, config) {
+          console.log("Error in update");
+          error();
+        })
+        .then(function(res){
+          console.log('Updated! '+ res.data);
+          success();
+        });
+      }
+    };
 })
 .factory('parents', function($http, urlConfig){
   var classes = [];
@@ -246,7 +258,19 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     getParent: function (id,callback) {
       var getUrl = url+"/"+id;
       genericGetAll($http, getUrl, callback);
-    }
+    },
+    updateParent: function(model, success, error){
+      updateUrl = url+"/update/"+model.id;
+      $http.post(updateUrl,model)
+        .error(function(data, status, headers, config) {
+          console.log("Error in update " + updateUrl);
+          error();
+        })
+        .then(function(res){
+          console.log('Updated! ', res.data);
+          success();
+        });
+      }
   };
 })
 .factory('images', function($http, urlConfig){

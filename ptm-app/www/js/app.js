@@ -20,11 +20,6 @@ angular.module('starter', ['ionic','ionic.service.core', 'starter.controllers', 
       StatusBar.styleDefault();
     }
     var config = null;
-    if(ionic.Platform.isAndroid()){
-      config = {
-        "senderID": "14768998028" // REPLACE THIS WITH YOURS FROM GCM CONSOLE - also in the project URL like: https://console.developers.google.com/project/434205989073
-        };
-    }
     var push = new Ionic.Push({
       "debug": true,
       "onNotification": function(notification) {
@@ -205,7 +200,8 @@ angular.module('starter', ['ionic','ionic.service.core', 'starter.controllers', 
     url: '/signup',
      views: {
         'menuContent': {
-          templateUrl: 'templates/signup.html'
+          templateUrl: 'templates/signup.html',
+          controller:'LoginCtrl'
         }
       }
   })
