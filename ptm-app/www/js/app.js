@@ -4,9 +4,9 @@
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
+angular.module('starter', ['ionic','ionic.service.core', 'starter.controllers', 'starter.services'])
 
-.run(function($ionicPlatform) {
+.run(function($ionicPlatform, $cordovaPush, sessionService, $state) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -19,6 +19,29 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       // org.apache.cordova.statusbar required
       StatusBar.styleDefault();
     }
+    var config = null;
+    if(ionic.Platform.isAndroid()){
+      config = {
+        "senderID": "14768998028" // REPLACE THIS WITH YOURS FROM GCM CONSOLE - also in the project URL like: https://console.developers.google.com/project/434205989073
+        };
+    }
+    var push = new Ionic.Push({
+      "debug": true,
+      "onNotification": function(notification) {
+        var payload = notification.payload;
+        console.log(notification, payload);
+      },
+      "onRegister": function(data) {
+        console.log(data.token);
+      }
+    });
+    var callback = function(pushToken) {
+      console.log(pushToken.token); //Save token to db
+    }
+    push.register(callback);
+    // if(sessionService.get('loginData')!=null){
+    //   $state.go('app.browse');
+    // }
   });
 })
 
@@ -208,7 +231,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     url: '/login',
     views: {
       'menuContent': {
-        templateUrl: 'templates/login.html'
+        templateUrl: 'templates/login.html',
+        controller: 'LoginCtrl'
       }
     }
   }).state('app.logout', {

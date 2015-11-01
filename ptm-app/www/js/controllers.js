@@ -8,10 +8,17 @@ function isLoggedIn(sessionService){
   }
 }
 
-function takeActionIfNotLoggedIn(sessionService, $state){
+function takeActionIfNotLoggedIn(sessionService, $state, $ionicHistory){
   if(!isLoggedIn(sessionService)){
-    $state.go('login', {}, {reload: true});
+    $ionicHistory.clearCache();
+    $ionicHistory.clearHistory();
+    $ionicHistory.nextViewOptions({
+              disableBack: true
+          });
+    $state.go('app.login', {}, {reload: true});
+    return true;
   }
+  return false;
 }
 
 function isCurrentUserAParent(sessionService){
@@ -60,7 +67,7 @@ function isOfficeHours(settings){
 
 angular.module('starter.controllers', ['ionic', 'starter.config','starter.services', 'ngCordova'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
+.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $cordovaPush, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -72,7 +79,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   $scope.officeHours = false;
   $scope.schools = [];
   school.getAll(function(data){
-    console.log(data);
     $scope.schools = data;
   });
   $scope.isParent = true;
@@ -86,13 +92,15 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   };
   $scope.message = '';
 
+
+})
+.controller('LoginCtrl', function($scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
+
   $ionicModal.fromTemplateUrl('templates/login.html', {
     scope: $scope
   }).then(function(modal) {
     $scope.modal = modal;
   });
-
-
 
   // Triggered in the login modal to close it
   $scope.closeLogin = function() {
@@ -127,18 +135,19 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     .error(function(data, status, headers, config) {
       console.log(data,status,headers,config);
       $scope.showAlert('Invalid Username/Password: ' + data.err);
+      alert(loginUrl);
       $ionicLoading.hide();
     })
     .then(function(res){
       $scope.toggleDrag = true;
       console.log(res);
-      sessionService.store("loginData",res.data);
+      sessionService.persist("loginData",res.data);
       if(res.data.model.settings && isOfficeHours(res.data.model.settings)){
         $scope.officeHours = true;
       }
       if(res.data.userType=="Parent"){
         student.getWardsOfParent(res.data.model,function(data){
-          sessionService.store("wards", data);
+          sessionService.persist("wards", data);
           $scope.isParent = true;
           console.log(data);
 
@@ -225,7 +234,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     }
   };
 })
-
 .controller('ChatsCtrl', function($scope, Chats, sessionService, classes, teachers, student, $ionicLoading) {
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -260,11 +268,11 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     if(!wards){
         student.getWardsOfParent(sessionService.get("loginData").model.id, function(data){
           sessionService.set("wards",data);
-          getChatItems(data);          
+          getChatItems(data);
         });
     }
     else{
-      getChatItems(wards);    
+      getChatItems(wards);
     }
 
   }
@@ -302,7 +310,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   // }
 })
 
-.controller('ChatDetailCtrl', function($scope, $stateParams, Chats, sessionService, parents, teachers) {
+.controller('ChatDetailCtrl', function($scope, $stateParams, $ionicScrollDelegate, Chats, sessionService, parents, teachers) {
   $scope.hideTime = true;
   var userType = sessionService.get("loginData").userType;
   var alternate, isIOS = ionic.Platform.isWebView() && ionic.Platform.isIOS();
@@ -326,7 +334,10 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     parentId = userId;
     teacherId = $scope.myId;
   }
-  function getLatestChats(){
+  function getLatestChats(cb){
+    if(sessionService.get(userId)!=null){
+      $scope.messages = sessionService.get(userId);
+    }
     var skip = $scope.messages.length;
     Chats.getChats(teacherId,parentId,skip, function(data){
       data.forEach(function (val,i,a) {
@@ -336,13 +347,22 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           time: new Date(val.time).toLocaleTimeString().replace(/:\d+ /, ' ')
         };
         $scope.messages.push(obj);
-      })
+        sessionService.persist(userId,$scope.messages);
+      });
+      if(cb){
+        cb();
+      }
+      if(data.length!=0){
+        $ionicScrollDelegate.scrollBottom(true);
+      }
     });
   }
   io.socket.on('message', function(msg){
 
   });
-  getLatestChats();
+  getLatestChats(function(){
+    $ionicScrollDelegate.scrollBottom(true);
+  });
   $scope.sendMessage = function() {
     var d = new Date();
     d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
@@ -362,6 +382,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       time: d
     };
     $scope.messages.push(obj);
+    $ionicScrollDelegate.scrollBottom(true);
     $scope.data.message = "";
     console.log(obj);
   }
@@ -369,7 +390,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //$scope.chat = Chats.get($stateParams.chatId);
 })
 
-.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, sessionService, classes, student, urlConfig, images){
+.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
+
   var userType = sessionService.get("loginData").userType;
   var model = sessionService.get("loginData").model;
   var ward;
@@ -419,6 +441,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     }
 
     var options = new FileUploadOptions();
+
     options.fileKey = "image";
     options.fileName = fileURL.substr(fileURL.lastIndexOf('/') + 1);
 
@@ -445,6 +468,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 				}
 			}, function (error) {
 				console.log('Error: ' + error);
+        $ionicLoading.hide();
         $scope.showAlert(error);
 			},
       {
@@ -498,7 +522,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       }
     });
   }
-  
+
   function updateNoticeBoard(){
     $ionicLoading.show();
     $scope.notices = [];
@@ -512,7 +536,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         }
         $scope.notices = notices;
         getImages($scope.notices);
-        console.log($scope.notices);
         $ionicLoading.hide();
         $scope.$broadcast('scroll.refreshComplete');
       });
@@ -544,6 +567,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   $scope.postMessage = function(announcement) {
     announcement.images = $scope.imageFiles;
     console.log(announcement);
+    if(!announcement.forClass){
+      $scope.showAlert("Please specify a class");
+    }
     $ionicLoading.show();
     noticeBoard.postNotice(announcement, function(err){
       $scope.showAlert(err);
@@ -722,7 +748,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 })
 .controller('MenuCtrl', function($scope, $stateParams, sessionService) {
-  
+
   if(sessionService.get("loginData")!=null){
     $scope.isLoggedIn = true;
     if(sessionService.get("loginData").userType=="Parent"){
