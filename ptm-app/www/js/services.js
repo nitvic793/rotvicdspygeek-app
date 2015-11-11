@@ -10,7 +10,7 @@ function genericGetAll($http, url, callback){
 angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
 
 .factory('Chats', function($http, urlConfig) {
-  var url = urlConfig.backend+"chat";
+  var url = urlConfig.backend+"chats";
   return {
     getChats: function (teacherId, parentId,skip, callback) {
       var getUrl = url+"?teacher="+teacherId+"&parent="+parentId+"&skip="+skip;
@@ -18,7 +18,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     },
     sendChat : function (chatObj) {
       console.log(chatObj);
-      var createUrl = url+"/create";
+      var createUrl = url+"/createChat";
       $http.post(createUrl,chatObj)
       .error(function(data, status, headers, config) {
         console.log("Error in sending message!");
@@ -101,7 +101,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
 }])
 
 .factory('school', function($http, urlConfig, sessionService){
-  var url = urlConfig.backend + "school"
+  var url = urlConfig.backend + "schools"
   return {
     getAll: function(callback) {
       genericGetAll($http, url, callback);
@@ -164,7 +164,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
 })
 .factory('classes', function($http, urlConfig){
   var classes = [];
-  var url = urlConfig.backend+"class";
+  var url = urlConfig.backend+"classes";
   return {
     getAllClasses : function (callback) {
       genericGetAll($http, url, callback);
@@ -307,6 +307,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     },
     getWardsOfParent: function(parent, callback){
       var wardUrl = urlConfig.backend+"wardrelation/?parent="+parent.id;
+      console.log(wardUrl);
       genericGetAll($http,wardUrl,callback);
     },
     getWardReviews: function(ward, callback){

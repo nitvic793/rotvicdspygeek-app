@@ -155,7 +155,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     .error(function(data, status, headers, config) {
       console.log(data,status,headers,config);
       $scope.showAlert('Invalid Username/Password: ' + data.err);
-      alert(loginUrl);
       $ionicLoading.hide();
     })
     .then(function(res){
@@ -166,6 +165,15 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         $scope.officeHours = true;
       }
       if(res.data.userType=="Parent"){
+        if(!res.data.model.pushToken){
+          push.register(function(pushToken){
+            console.log(pushToken);
+            res.data.model.pushToken = pushToken.token;
+            parents.updateParent(res.data.model,function(){},function(){
+              console.log("Could not register for push notification");
+            });
+          });
+        }
         student.getWardsOfParent(res.data.model,function(data){
           sessionService.persist("wards", data);
           $scope.isParent = true;
@@ -181,6 +189,15 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         });
       }
       else {
+        if(!res.data.model.pushToken){
+          push.register(function(pushToken){
+            console.log(pushToken);
+            res.data.model.pushToken = pushToken.token;
+            teachers.updateTeacher(res.data.model,function(){},function(){
+              console.log("Could not register for push notification");
+            });
+          });
+        }
         classes.getSubjectsOfTeacher(res.data.model.id, function(data){
           $scope.isParent = false;
           if(!data || data.length==0){
@@ -301,9 +318,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   if(userType=='Parent'){
     $ionicLoading.show();
     var wards = sessionService.get("wards");
-    if(!wards){
-        student.getWardsOfParent(sessionService.get("loginData").model.id, function(data){
-          sessionService.set("wards",data);
+    if(!wards || wards.length==0){
+        student.getWardsOfParent(sessionService.get("loginData").model, function(data){
+          sessionService.store("wards",data);
           getChatItems(data);
         });
     }
@@ -372,6 +389,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
   function getLatestChats(cb){
     if(sessionService.get(userId)!=null){
+      //sessionService.destroy(userId);
       $scope.messages = sessionService.get(userId);
     }
     var skip = $scope.messages.length;
@@ -428,6 +446,10 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 .controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
 
+  if(sessionService.get("loginData")==null){
+    $state.go("app.login");
+    return;
+  }
   var userType = sessionService.get("loginData").userType;
   var model = sessionService.get("loginData").model;
   var ward;
@@ -565,6 +587,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $scope.noticeImages = [];
     userType = sessionService.get("loginData").userType;
     model = sessionService.get("loginData").model;
+    console.log("Getting notice board: " + userType);
+    console.log("UserId: "+ model.id);
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
         if(notices==null){
@@ -617,23 +641,26 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     });
   }
 
-  $scope.$on('$ionicView.enter', function(e) {
-    if(userType=='Parent'){
-      wards = sessionService.get("wards");
-      if(wards.length==0){
-      student.getWardsOfParent(model,function(data){
-        wards = data;
-        updateNoticeBoard();
-        });
+
+    $scope.$on('$ionicView.enter', function(e) {
+      if(userType=='Parent'){
+        wards = sessionService.get("wards");
+        console.log("Updating notice board");
+        if(!wards || wards.length==0){
+        student.getWardsOfParent(model,function(data){
+          wards = data;
+          updateNoticeBoard();
+          });
+        }
+        else{
+          updateNoticeBoard();
+        }
       }
-      else{
+      else {
         updateNoticeBoard();
       }
-    }
-    else {
-      updateNoticeBoard();
-    }
-  });
+    });
+
 })
 
 .controller('StudentReviewCtrl', function($scope, $state, $ionicModal, $ionicPopup, sessionService, classes, student, teachers) {
