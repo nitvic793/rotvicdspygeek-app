@@ -20,6 +20,7 @@ angular.module('starter', ['ionic','ionic.service.core', 'starter.controllers', 
       StatusBar.styleDefault();
     }
     var config = null;
+    if(Ionic && Ionic.Push){
     var push = new Ionic.Push({
       "debug": true,
       "onNotification": function(notification) {
@@ -34,6 +35,7 @@ angular.module('starter', ['ionic','ionic.service.core', 'starter.controllers', 
       console.log(pushToken.token); //Save token to db
     }
     push.register(callback);
+    }
     // if(sessionService.get('loginData')!=null){
     //   $state.go('app.browse');
     // }

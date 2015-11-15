@@ -16,15 +16,21 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       var getUrl = url+"?teacher="+teacherId+"&parent="+parentId+"&skip="+skip;
       genericGetAll($http,getUrl,callback);
     },
-    sendChat : function (chatObj) {
+    sendChat : function (chatObj, errorCb, successCb) {
       console.log(chatObj);
       var createUrl = url+"/createChat";
       $http.post(createUrl,chatObj)
       .error(function(data, status, headers, config) {
         console.log("Error in sending message!");
+        if(errorCb){
+          errorCb();
+        }
       })
       .then(function(res){
         console.log('Message sent! '+ res.data);
+        if(successCb){
+          successCb();
+        }
       });
     }
   };

@@ -427,7 +427,12 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       sender:userType,
       message:$scope.data.message,
       time:new Date()
-    });
+    }, function onError(){
+      $scope.showAlert("Could not send message. " + data.err);
+    }, function onSuccess(){
+
+    }
+    );
     //TO DO : Need to integrate socket/GCM/ApplePush services here for sending messages. Maybe just socket for now
 
     obj = {
