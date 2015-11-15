@@ -67,7 +67,7 @@ function isOfficeHours(settings){
 
 angular.module('starter.controllers', ['ionic', 'starter.config','starter.services', 'ngCordova'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $ionicPopup, $cordovaPush, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
+.controller('AppCtrl', function($rootScope, $scope, $ionicModal, $ionicPopup, $cordovaPush, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -75,13 +75,23 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   // listen for the $ionicView.enter event:
   //$scope.$on('$ionicView.enter', function(e) {
   //});
+  $scope.logout = function(){
+    sessionService.destroy("loginData");
+    $ionicHistory.clearCache();
+    $ionicHistory.clearHistory();
+    $ionicHistory.nextViewOptions({
+              disableBack: true
+          });
+    $state.go("app.login");
+  }
   $scope.toggleDrag = false;
   $scope.officeHours = false;
   $scope.schools = [];
   school.getAll(function(data){
     $scope.schools = data;
   });
-  $scope.isParent = true;
+  $rootScope.isParent = true;
+
   // Form data for the login modal
   $scope.loginData = {
     userType:'Parent'
@@ -103,7 +113,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 
 })
-.controller('LoginCtrl', function($scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes, teachers, parents) {
+.controller('LoginCtrl', function($rootScope, $scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes, teachers, parents) {
 
   var push = new Ionic.Push({
     "debug": true,
@@ -176,14 +186,14 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         }
         student.getWardsOfParent(res.data.model,function(data){
           sessionService.persist("wards", data);
-          $scope.isParent = true;
+          $rootScope.isParent = true;
           console.log(data);
 
           if(!data || data.length==0){
             $state.go('app.addWard');
           }
           else{
-            $state.go('app.browse');
+            $state.go('app.browse',{}, {reload: true});
           }
           $ionicLoading.hide();
         });
@@ -199,12 +209,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           });
         }
         classes.getSubjectsOfTeacher(res.data.model.id, function(data){
-          $scope.isParent = false;
+          $rootScope.isParent = false;
+
           if(!data || data.length==0){
             $state.go('app.addSubject');
           }
           else{
-            $state.go('app.browse');
+            $state.go('app.browse',{}, {reload: true});
           }
           $ionicLoading.hide();
         });
@@ -387,6 +398,23 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     parentId = userId;
     teacherId = $scope.myId;
   }
+  var socketId;
+  function registerSocket(){
+    io.socket.get("/chats/getSocketId", function(resData, jwres) {
+      console.log(resData);
+      socketId = resData.socketId;
+      io.socket.post('/chats/registerSocket', { userId: $scope.myId, socketId:socketId }, function (resData) {
+        console.log("Status", resData.status);
+        console.log(resData.status);
+        console.log("Socket Id "+ socketId);
+      });
+    });
+  }
+  registerSocket();
+  io.socket.on("connect", function onConnect(){
+    registerSocket();
+    getLatestChats();
+  });
   function getLatestChats(cb){
     if(sessionService.get(userId)!=null){
       //sessionService.destroy(userId);
@@ -412,11 +440,24 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     });
   }
   io.socket.on('message', function(msg){
+    console.log("Chat message received via Socket");
+    console.log("Socket", msg);
+    var obj = {
+      userId: msg.senderId,
+      text: msg.message,
+      time: new Date(msg.time).toLocaleTimeString().replace(/:\d+ /, ' ')
+    };
+    $scope.messages.push(obj);
+    $scope.$apply();
+    sessionService.persist(userId, $scope.messages);
+    $ionicScrollDelegate.scrollBottom(true);
 
   });
+
   getLatestChats(function(){
     $ionicScrollDelegate.scrollBottom(true);
   });
+
   $scope.sendMessage = function() {
     var d = new Date();
     d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
@@ -445,7 +486,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $scope.data.message = "";
     console.log(obj);
   }
-  var intervalID = setInterval(getLatestChats,2000);
+  //var intervalID = setInterval(getLatestChats,2000);
   //$scope.chat = Chats.get($stateParams.chatId);
 })
 
@@ -646,7 +687,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     });
   }
 
-
     $scope.$on('$ionicView.enter', function(e) {
       if(userType=='Parent'){
         wards = sessionService.get("wards");
@@ -815,20 +855,21 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   $scope.messages = [];
 
 })
-.controller('MenuCtrl', function($scope, $stateParams, sessionService) {
+.controller('MenuCtrl', function($rootScope, $scope, $stateParams, sessionService) {
 
   if(sessionService.get("loginData")!=null){
     $scope.isLoggedIn = true;
     if(sessionService.get("loginData").userType=="Parent"){
-      $scope.isParent = true;
+      $rootScope.isParent = true;
     }
     else{
-      $scope.isParent = false;
+      $rootScope.isParent = false;
     }
   }
   else{
     $scope.isLoggedIn = false;
   }
+
 
 })
 .controller('LogoutCtrl', function($scope, $stateParams, $ionicHistory, $state, sessionService) {

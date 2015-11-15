@@ -8,7 +8,16 @@ function genericGetAll($http, url, callback){
 }
 
 angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
+.factory('socket',function(socketFactory, urlConfig){
+        //Create socket and connect to http://chat.socket.io
+         var myIoSocket = io.connect(urlConfig.backend);
 
+          mySocket = socketFactory({
+            ioSocket: myIoSocket
+          });
+
+        return mySocket;
+})
 .factory('Chats', function($http, urlConfig) {
   var url = urlConfig.backend+"chats";
   return {
