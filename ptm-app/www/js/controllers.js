@@ -759,6 +759,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      if($scope.review.model){
        teachers.postReview(obj, function(data){
             updateReviews();
+            $scope.review.comments = "";
        });
      }
      else {
