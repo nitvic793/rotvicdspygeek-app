@@ -1,12 +1,12 @@
-<ion-view view-title="Chats" class="container">
+<ion-view view-title="Chats" class="container" cache-view="false">
   <ion-content>
   <div class="list list-inset">
   <label class="item item-input">
     <i class="icon ion-search placeholder-icon"></i>
-    <input type="text" placeholder="Search">
+    <input type="text" placeholder="Search" ng-model="search.name">
   </label>
 </div>
-      <ion-item class="item-remove-animate  item-icon-right" ng-repeat="chat in chatItems" type="item-text-wrap" href="#/app/chats/{{chat.id}}">
+      <ion-item class="item-remove-animate  item-icon-right" ng-repeat="chat in chatItems | filter:search" type="item-text-wrap" href="#/app/chats/{{chat.id}}">
         <!-- <img ng-src="{{chat.face}}"> -->
         <h2>{{chat.name}}</h2>
         <p>{{chat.subject}}</p>

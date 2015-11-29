@@ -164,7 +164,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $http.post(loginUrl,$scope.loginData)
     .error(function(data, status, headers, config) {
       console.log(data,status,headers,config);
-      $scope.showAlert('Invalid Username/Password: ' + data.err);
+      $scope.showAlert('Error in logging in: ' + data.err);
       $ionicLoading.hide();
     })
     .then(function(res){
@@ -486,8 +486,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $scope.data.message = "";
     console.log(obj);
   }
-  //var intervalID = setInterval(getLatestChats,2000);
-  //$scope.chat = Chats.get($stateParams.chatId);
+
 })
 
 .controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
@@ -495,6 +494,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   if(sessionService.get("loginData")==null){
     $state.go("app.login");
     return;
+  }
+  else{
+    //Need to check token expiration and ask for re login if needed
   }
   var userType = sessionService.get("loginData").userType;
   var model = sessionService.get("loginData").model;
@@ -562,6 +564,10 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $ionicLoading.show();
     window.imagePicker.getPictures(
 			function(results) {
+        if(!results || results.length == 0){
+          $ionicLoading.hide();
+          return; //No image selected
+        }
 				for (var i = 0; i < results.length; i++) {
 					console.log('Image URI: ' + results[i]);
 					$scope.images.push(results[i]);
@@ -628,7 +634,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
   function updateNoticeBoard(){
-    $ionicLoading.show();
+    //$ionicLoading.show();
     $scope.notices = [];
     $scope.noticeImages = [];
     userType = sessionService.get("loginData").userType;
@@ -642,7 +648,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         }
         $scope.notices = notices;
         getImages($scope.notices);
-        $ionicLoading.hide();
+      //  $ionicLoading.hide();
         $scope.$broadcast('scroll.refreshComplete');
       });
     }
@@ -675,6 +681,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     console.log(announcement);
     if(!announcement.forClass){
       $scope.showAlert("Please specify a class");
+      return;
     }
     $ionicLoading.show();
     noticeBoard.postNotice(announcement, function(err){
