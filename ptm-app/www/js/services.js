@@ -343,4 +343,25 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       }
     }
 
+})
+.factory('feedback', function($http, urlConfig){
+  var url = urlConfig.backend+"feedback";
+  return {
+    postFeedback: function (feedback,successCb, errCb) {
+      var createUrl = url+"/create";
+      $http.post(createUrl, feedback)
+      .error(function(data, status, headers, config) {
+        console.log("Error in posting feedback");
+        if(errCb){
+          errCb(data);
+        }
+      })
+      .then(function(res){
+        console.log('Feedback posted! '+ res.data);
+        if(successCb){
+          successCb(res.data);
+        }
+      });
+    }
+  };
 });

@@ -76,6 +76,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //$scope.$on('$ionicView.enter', function(e) {
   //});
   $scope.logout = function(){
+    $rootScope.toggleDrag = false;
     sessionService.destroy("loginData");
     $ionicHistory.clearCache();
     $ionicHistory.clearHistory();
@@ -84,7 +85,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           });
     $state.go("app.login");
   }
-  $scope.toggleDrag = false;
+  $rootScope.toggleDrag = false;
   $scope.officeHours = false;
   $scope.schools = [];
   school.getAll(function(data){
@@ -168,14 +169,15 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $ionicLoading.hide();
     })
     .then(function(res){
-      $scope.toggleDrag = true;
+      $rootScope.toggleDrag = true;
       console.log(res);
       sessionService.persist("loginData",res.data);
+      $http.defaults.headers.common.Authorization = "Basic " + res.data.token;
       if(res.data.model.settings && isOfficeHours(res.data.model.settings)){
         $scope.officeHours = true;
       }
       if(res.data.userType=="Parent"){
-        if(!res.data.model.pushToken){
+        if(true){//!res.data.model.pushToken){//hack 
           push.register(function(pushToken){
             console.log(pushToken);
             res.data.model.pushToken = pushToken.token;
@@ -199,7 +201,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         });
       }
       else {
-        if(!res.data.model.pushToken){
+        if(true){//!res.data.model.pushToken){ //Hack
           push.register(function(pushToken){
             console.log(pushToken);
             res.data.model.pushToken = pushToken.token;
@@ -1095,6 +1097,21 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       }
     });
     console.log(model);
+  }
+})
+.controller('FeedbackCtrl', function($scope,feedback,sessionService, $stateParams) {
+  $scope.feedback = {};
+  $scope.sendFeedback = function(){
+    var obj = {
+      feedback:$scope.feedback.text,
+      user:sessionService.get("loginData").user.id
+    };
+    feedback.postFeedback(obj,function(data){
+      $scope.feedback.text = "";
+      $scope.showAlert("Feedback submitted!");
+    },function(data){
+      $scope.showAlert("Could not submit feedback. Check internet connection");
+    });
   }
 })
 .controller('PlaylistsCtrl', function($scope) {

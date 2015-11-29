@@ -4,10 +4,11 @@
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic','ionic.service.core', 'starter.controllers', 'starter.services'])
+angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics', 'starter.controllers', 'starter.services'])
 
-.run(function($ionicPlatform, $cordovaPush, sessionService, $state) {
+.run(function($ionicPlatform, $ionicAnalytics, $cordovaPush, sessionService, $state) {
   $ionicPlatform.ready(function() {
+     $ionicAnalytics.register();
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
     if (window.cordova && window.cordova.plugins.Keyboard) {
@@ -233,7 +234,17 @@ angular.module('starter', ['ionic','ionic.service.core', 'starter.controllers', 
         controller: 'LoginCtrl'
       }
     }
-  }).state('app.logout', {
+  })
+  .state('app.feedback', {
+    url: '/feedback',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/feedback.html',
+        controller: 'FeedbackCtrl'
+      }
+    }
+  })
+  .state('app.logout', {
     url: '/logout',
     views: {
       'menuContent': {
