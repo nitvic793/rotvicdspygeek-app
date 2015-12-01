@@ -735,7 +735,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      $scope.modal = modal;
    }, {
      scope: $scope,
-     animation: 'slide-in-up'
+     animation: 'slide-in-up',
+     focusFirstInput:true
    });
    $scope.studentReviewModal = "";
    $ionicModal.fromTemplateUrl('templates/postStudentReviewModal.html', function(modal) {

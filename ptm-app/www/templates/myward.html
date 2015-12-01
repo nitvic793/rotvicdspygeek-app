@@ -6,14 +6,12 @@
       </ion-item>
     </ion-list>
     <div class="card" ng-repeat="review in reviews">
-      <div class="item item-divider">
-       {{review.teacher.firstname}} {{review.teacher.lastname}}
-      </div>
 	     <div class="item item-text-wrap" >
-	        {{review.review}}
+         <h2>{{review.teacher.firstname}} {{review.teacher.lastname}}</h2>
+	        <p><small><time datetime="temporal">{{review.createdAt | date:'MMM d yyyy'}}</time></small></p>
 	     </div>
        <div class="item">
-         <h4><time datetime="temporal">{{review.createdAt | date:'MMM d yyyy'}}</time></h4>
+         <p>{{review.review}}</p>
        </div>
 	</div>
   </ion-content>

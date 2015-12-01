@@ -18,6 +18,23 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
 
         return mySocket;
 })
+.directive('focusMe', function($timeout) {
+  return {
+    scope: {
+       focusValue: "=focusMe"
+   },
+       link: function(scope, element, attrs) {
+           console.log("focusMe directiveinit " + scope.focusValue);
+           if( scope.focusValue ) {
+               $timeout(function() {
+                   console.log(" adding focus to element")
+
+                   element[0].focus();
+               });
+           }
+       }
+   };
+})
 .factory('Chats', function($http, urlConfig) {
   var url = urlConfig.backend+"chats";
   return {
