@@ -364,4 +364,25 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       });
     }
   };
+})
+.factory('user', function($http, urlConfig){
+  var url = urlConfig.backend+"user";
+  return {
+    changePassword: function (user,successCb, errCb) {
+      var changeUrl = url+"/changePassword";
+      $http.post(changeUrl,user)
+      .error(function(data, status, headers, config) {
+        console.log("Error in changing password");
+        if(errCb){
+          errCb(data);
+        }
+      })
+      .then(function(res){
+        console.log('Password changed! '+ res.data);
+        if(successCb){
+          successCb(res.data);
+        }
+      });
+    }
+  };
 });

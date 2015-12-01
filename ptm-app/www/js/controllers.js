@@ -119,7 +119,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       console.log('Alert shown');
     });
   }
-
+  if(sessionService.get("loginData")!=null){
+    $http.defaults.headers.common.Authorization = "Bearer " + sessionService.get("loginData").token;
+  }
 
 })
 .controller('LoginCtrl', function($rootScope, $scope, $ionicModal, $ionicPopup, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes, teachers, parents) {
@@ -129,6 +131,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     "onNotification": function(notification) {
       var payload = notification.payload;
       console.log(notification, payload);
+
     },
     "onRegister": function(data) {
       console.log(data.token);
@@ -180,7 +183,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $rootScope.toggleDrag = true;
       console.log(res);
       sessionService.persist("loginData",res.data);
-      $http.defaults.headers.common.Authorization = "Basic " + res.data.token;
+      $http.defaults.headers.common.Authorization = "Bearer " + res.data.token;
       if(res.data.model.settings && isOfficeHours(res.data.model.settings)){
         $scope.officeHours = true;
       }
@@ -484,8 +487,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
     }
     );
-    //TO DO : Need to integrate socket/GCM/ApplePush services here for sending messages. Maybe just socket for now
-
     obj = {
       userId: $scope.myId,
       text: $scope.data.message,
@@ -499,7 +500,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 })
 
-.controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
+.controller('NoticeBoardCtrl', function($scope, $http, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
   if(sessionService.get("loginData")==null){
     $state.go("app.login");
     return;
@@ -507,6 +508,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   else{
     //Need to check token expiration and ask for re login if needed
   }
+  $http.defaults.headers.common.Authorization = "Bearer " + sessionService.get("loginData").token;
   var userType = sessionService.get("loginData").userType;
   var model = sessionService.get("loginData").model;
   var ward;
@@ -641,7 +643,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       }
     });
   }
-  
+
   function updateNoticeBoard(){
     //$ionicLoading.show();
     $scope.notices = [];
@@ -728,23 +730,33 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   //Need to add search students mechanism
   $scope.review = {};
   $scope.reviews = [];
+  $scope.search = {};
   $ionicModal.fromTemplateUrl('templates/studentListView.html', function(modal) {
      $scope.modal = modal;
    }, {
-     // Use our scope for the scope of the modal to keep it simple
      scope: $scope,
-     // The animation we want to use for the modal entrance
      animation: 'slide-in-up'
    });
+   $scope.studentReviewModal = "";
+   $ionicModal.fromTemplateUrl('templates/postStudentReviewModal.html', function(modal) {
+      $scope.studentReviewModal = modal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
    var myId = sessionService.get("loginData").model.id;
+
    function updateReviews(){
      $ionicLoading.show();
      teachers.getTeacherReviews(myId, function(data){
        $scope.reviews = data;
+       $scope.$broadcast('scroll.refreshComplete');
        console.log("Reviews updated");
        $ionicLoading.hide();
+
      });
    }
+   $scope.doRefresh = updateReviews();
    updateReviews();
    $scope.showAlert = function(message) {
      var alertPopup = $ionicPopup.alert({
@@ -762,6 +774,19 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      });
    }
 
+   $scope.onSearchChange = function(){
+     if($scope.search.student.firstName){
+       var str = $scope.search.student.firstName.split(' ');
+       $scope.searchCriteria = { student : {}};
+       $scope.searchCriteria.student.firstName = str[0];
+       if(str[1])
+       $scope.searchCriteria.student.lastName = str[1];
+     }
+     else{
+       $scope.searchCriteria = {};
+     }
+   }
+
    $scope.onClickList = function(model){
      $scope.modal.hide();
      $scope.review.model = model;
@@ -769,6 +794,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
    }
 
    $scope.postReview = function(){
+     $ionicLoading.show();
      var obj = {
        teacher: sessionService.get("loginData").model,
        student: $scope.review.model,
@@ -778,9 +804,12 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
        teachers.postReview(obj, function(data){
             updateReviews();
             $scope.review.comments = "";
+            $scope.studentReviewModal.hide();
+            $ionicLoading.hide();
        });
      }
      else {
+       $ionicLoading.hide();
        $scope.showAlert("Invalid student name entered!");
      }
    }
@@ -966,13 +995,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      });
    }
 })
-.controller('SettingsCtrl', function($scope, $stateParams, sessionService) {
+.controller('SettingsCtrl', function($scope, $rootScope, $stateParams, sessionService) {
   $scope.isParent = isCurrentUserAParent(sessionService);
   settings = sessionService.get("loginData").model.settings;
   if(settings && isOfficeHours(settings)){
-    $scope.officeHours = true;
+    $rootScope.officeHours = true;
   }
-  console.log($scope.officeHours);
+  console.log($rootScope.officeHours);
 
 })
 .controller('AddSubjectCtrl', function($scope, $stateParams,$ionicModal, $ionicActionSheet,$ionicLoading, $timeout,sessionService, student, classes) {
@@ -1124,6 +1153,28 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $scope.showAlert("Could not submit feedback. Check internet connection");
     });
   }
+})
+.controller('PasswordCtrl', function($scope, $ionicLoading, $stateParams,sessionService, user) {
+  $scope.user = {
+    email: sessionService.get("loginData").user.email
+  };
+  $scope.changePassword = function(){
+    $ionicLoading.show();
+    user.changePassword($scope.user, function(data){
+      $ionicLoading.hide();
+      if(!data.err){
+        $scope.showAlert(data.status);
+      }
+      else{
+        $scope.showAlert("Error: " + data.err);
+      }
+    },
+    function(data){
+        $ionicLoading.hide();
+        $scope.showAlert("Error in updating password");
+    });
+  }
+
 })
 .controller('PlaylistsCtrl', function($scope) {
   $scope.playlists = [

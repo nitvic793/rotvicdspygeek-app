@@ -244,6 +244,15 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
       }
     }
   })
+  .state('app.changePassword', {
+    url: '/settings/changePassword',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/changePassword.html',
+        controller: 'PasswordCtrl'
+      }
+    }
+  })
   .state('app.logout', {
     url: '/logout',
     views: {
