@@ -1,3 +1,11 @@
+function guid(){
+  var val = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  var r = crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
+  return v.toString(16);
+  });
+  return val;
+}
+
 function isLoggedIn(sessionService){
   var data = sessionService.get("loginData");
   if(!data || !data.userType || !data.model){
@@ -177,7 +185,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         $scope.officeHours = true;
       }
       if(res.data.userType=="Parent"){
-        if(true){//!res.data.model.pushToken){//hack 
+        if(true){//!res.data.model.pushToken){//hack
           push.register(function(pushToken){
             console.log(pushToken);
             res.data.model.pushToken = pushToken.token;
@@ -492,7 +500,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 })
 
 .controller('NoticeBoardCtrl', function($scope, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
-
   if(sessionService.get("loginData")==null){
     $state.go("app.login");
     return;
@@ -551,7 +558,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     var options = new FileUploadOptions();
 
     options.fileKey = "image";
-    options.fileName = fileURL.substr(fileURL.lastIndexOf('/') + 1);
+    options.fileName = guid() + fileURL.substr(fileURL.lastIndexOf('/') + 1);
 
     var params = {};
     params.value1 = "test";
@@ -634,7 +641,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       }
     });
   }
-
+  
   function updateNoticeBoard(){
     //$ionicLoading.show();
     $scope.notices = [];
@@ -717,7 +724,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 })
 
-.controller('StudentReviewCtrl', function($scope, $state, $ionicModal, $ionicPopup, sessionService, classes, student, teachers) {
+.controller('StudentReviewCtrl', function($scope, $state, $ionicModal,$ionicLoading, $ionicPopup, sessionService, classes, student, teachers) {
   //Need to add search students mechanism
   $scope.review = {};
   $scope.reviews = [];
@@ -731,9 +738,11 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
    });
    var myId = sessionService.get("loginData").model.id;
    function updateReviews(){
+     $ionicLoading.show();
      teachers.getTeacherReviews(myId, function(data){
        $scope.reviews = data;
-       console.log("Reviews",data);
+       console.log("Reviews updated");
+       $ionicLoading.hide();
      });
    }
    updateReviews();
@@ -777,17 +786,19 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
    }
 })
 
-.controller('MyWardCtrl', function($scope, $state, $ionicModal, sessionService, student) {
+.controller('MyWardCtrl', function($scope, $state, $ionicModal,$ionicLoading, sessionService, student) {
   var userType = sessionService.get("loginData").userType;
   $scope.wards = [];
   $scope.reviews = [];
   $scope.getReviews = function(ward){
     student.getWardReviews(ward.student,function(data){
       $scope.reviews = data;
+      $ionicLoading.hide();
     });
   }
 
   if(userType=='Parent'){
+    $ionicLoading.show();
     var wards = sessionService.get("wards");
     if(wards.length==0){
       student.getWardsOfParent(sessionService.get("loginData").model,function(data){
