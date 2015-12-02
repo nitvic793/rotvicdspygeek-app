@@ -1,0 +1,22 @@
+<ion-modal-view view-title="Playlists">
+  <div class="bar bar-header item-input-inset">
+    <label class="item-input-wrapper" focus-me>
+      <i class="icon ion-ios-search placeholder-icon"></i>
+      <input type="search" placeholder="Search" ng-model="review.studentNameModal" ng-change="onChange()">
+    </label>
+    <button class="button button-clear" ng-click="contactsModal.hide()">
+      Cancel
+    </button>
+  </div>
+  <hr>
+  <ion-content>
+
+    <ion-list>
+      <ion-item ng-repeat="student in studs">
+        <div ng-click="onClickList(student)">{{student.firstName}} {{student.lastName}}
+        <strong>{{student.registrationNo}}</strong></div>
+      </ion-item>
+    </ion-list>
+
+  </ion-content>
+</ion-modal-view>

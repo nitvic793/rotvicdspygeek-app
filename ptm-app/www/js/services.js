@@ -280,6 +280,10 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
           console.log('Updated! '+ res.data);
           success();
         });
+      },
+      getAllTeachersOfSchool: function(schoolId, callback){
+        var getUrl = url+"?school="+schoolId;
+        genericGetAll($http, getUrl, callback);
       }
     };
 })
@@ -302,6 +306,10 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
           console.log('Updated! ', res.data);
           success();
         });
+      },
+      getAllParentsOfSchool: function(schoolId, callback){
+        var getUrl = url+"?school="+schoolId;
+        genericGetAll($http, getUrl, callback);
       }
   };
 })

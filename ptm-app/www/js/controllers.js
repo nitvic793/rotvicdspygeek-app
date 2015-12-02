@@ -77,12 +77,6 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
 .controller('AppCtrl', function($rootScope, $scope, $ionicModal, $ionicPopup, $cordovaPush, $ionicLoading, $timeout, $ionicHistory, $state, $http, urlConfig, sessionService, school, student, classes) {
 
-  // With the new view caching in Ionic, Controllers are only called
-  // when they are recreated or on app start, instead of every page change.
-  // To listen for when this page is active (for example, to refresh data),
-  // listen for the $ionicView.enter event:
-  //$scope.$on('$ionicView.enter', function(e) {
-  //});
   $scope.logout = function(){
     $rootScope.toggleDrag = false;
     sessionService.destroy("loginData");
@@ -318,7 +312,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   };
 
 })
-.controller('ChatsCtrl', function($scope, Chats, sessionService, classes, teachers, student, $ionicLoading) {
+.controller('ChatsCtrl', function($scope, $ionicModal, Chats, sessionService, classes, teachers, student, $ionicLoading) {
   var userType = sessionService.get("loginData").userType;
   var ward;
   function getChatItems(wards){
@@ -381,10 +375,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       });
     });
   }
-  // $scope.chats = Chats.all();
-  // $scope.remove = function(chat) {
-  //   Chats.remove(chat);
-  // }
+
+  $ionicModal.fromTemplateUrl('templates/chatContactsModal.html', {
+    scope: $scope
+  }).then(function(modal) {
+    $scope.contactsModal = modal;
+  });
+
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, $ionicScrollDelegate, Chats, sessionService, parents, teachers) {
@@ -1143,16 +1140,21 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 .controller('FeedbackCtrl', function($scope,feedback,sessionService, $stateParams) {
   $scope.feedback = {};
   $scope.sendFeedback = function(){
-    var obj = {
-      feedback:$scope.feedback.text,
-      user:sessionService.get("loginData").user.id
-    };
-    feedback.postFeedback(obj,function(data){
-      $scope.feedback.text = "";
-      $scope.showAlert("Feedback submitted!");
-    },function(data){
-      $scope.showAlert("Could not submit feedback. Check internet connection");
-    });
+    if($scope.feedback.text!=null && $scope.feedback.text!="") {
+      var obj = {
+        feedback:$scope.feedback.text,
+        user:sessionService.get("loginData").user.id
+      };
+      feedback.postFeedback(obj,function(data){
+        $scope.feedback.text = "";
+        $scope.showAlert("Feedback submitted!");
+      },function(data){
+        $scope.showAlert("Could not submit feedback. Check internet connection");
+      });
+    }
+    else{
+      $scope.showAlert("Feedback text cannot be empty!")
+    }
   }
 })
 .controller('PasswordCtrl', function($scope, $ionicLoading, $stateParams,sessionService, user) {
