@@ -1,6 +1,6 @@
 <ion-view view-title="Chats" class="container" cache-view="false">
   <ion-nav-buttons side="right">
-     <button class="button button-icon ion-plus" ng-click=""></button>
+     <button class="button button-icon ion-plus" ng-click="addGroupModal.show()"></button>
      <button class="button button-icon ion-person" ng-click="contactsModal.show()"></button>
   </ion-nav-buttons>
   <ion-content>
@@ -10,7 +10,7 @@
     <input type="text" placeholder="Search" ng-model="search.name">
   </label>
 </div>
-      <ion-item class="item-remove-animate  item-icon-right" ng-repeat="chat in chatItems | filter:search" type="item-text-wrap" href="#/app/chats/{{chat.id}}">
+      <ion-item class="item-remove-animate  item-icon-right" ng-repeat="chat in chatItems | filter:search" type="item-text-wrap" ng-click="chatNavigate(chat)">
         <!-- <img ng-src="{{chat.face}}"> -->
         <h2>{{chat.name}}</h2>
         <p>{{chat.subject}}</p>

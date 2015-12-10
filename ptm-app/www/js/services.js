@@ -35,11 +35,12 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
        }
    };
 })
-.factory('Chats', function($http, urlConfig) {
+.factory('Chats', function($http, urlConfig, sessionService) {
   var url = urlConfig.backend+"chats";
   return {
-    getChats: function (teacherId, parentId,skip, callback) {
-      var getUrl = url+"?teacher="+teacherId+"&parent="+parentId+"&skip="+skip;
+    getChats: function (fromId, toId,skip, callback) {
+      var getUrl = url+'?where={"from":["'+fromId+'","'+toId+'"],"to":["'+fromId+'","'+toId+'"]}&skip='+skip;
+      console.log(getUrl);
       genericGetAll($http,getUrl,callback);
     },
     sendChat : function (chatObj, errorCb, successCb) {
@@ -58,6 +59,50 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
           successCb();
         }
       });
+    },
+    sendGroupChat : function (chatObj, errorCb, successCb) {
+      console.log(chatObj);
+      var createUrl = url+"/sendGroupChat";
+      $http.post(createUrl,chatObj)
+      .error(function(data, status, headers, config) {
+        console.log("Error in sending group message!");
+        if(errorCb){
+          errorCb();
+        }
+      })
+      .then(function(res){
+        console.log('Group Message sent! '+ res.data);
+        if(successCb){
+          successCb();
+        }
+      });
+    },
+    createGroup : function(group,errorCb,successCb){
+      var createUrl = urlConfig.backend +"groups/create";
+      $http.post(createUrl,group)
+      .error(function(data, status, headers, config) {
+        console.log("Error in creating group!");
+        if(errorCb){
+          errorCb();
+        }
+      })
+      .then(function(res){
+        console.log('Group created! '+ res.data);
+        if(successCb){
+          successCb();
+        }
+      });
+    },
+    getMyGroups: function(cb){
+      var getUrl = urlConfig.backend + "groups/getGroupsWithUser?user="+sessionService.get("loginData").user.id;
+      genericGetAll($http,getUrl,cb);
+    },
+    getGroupChat: function(groupId,skip,cb){
+      if(!skip){
+        skip = 0;
+      }
+      var getUrl = url + "?group="+groupId+'&skip='+skip;
+      genericGetAll($http,getUrl,cb);
     }
   };
 })
@@ -309,6 +354,7 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       },
       getAllParentsOfSchool: function(schoolId, callback){
         var getUrl = url+"?school="+schoolId;
+        console.log(getUrl);
         genericGetAll($http, getUrl, callback);
       }
   };

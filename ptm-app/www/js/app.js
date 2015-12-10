@@ -226,6 +226,15 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
         }
       }
     })
+    .state('app.groupChat', {
+      url: '/chats/group/:groupId',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/groupChat.html',
+          controller: 'GroupChatCtrl'
+        }
+      }
+    })
   .state('app.login', {
     url: '/login',
     views: {

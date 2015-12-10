@@ -275,7 +275,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         })
         .then(function(res) {
           console.log(res);
-          if(res.statusText=='Created'){
+          if(res.data.statusText=='Created'){
             $scope.showAlert("Sign up succesful!");
             push.register(function(token){
               obj = res.data;
@@ -312,8 +312,10 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   };
 
 })
-.controller('ChatsCtrl', function($scope, $ionicModal, Chats, sessionService, classes, teachers, student, $ionicLoading) {
+.controller('ChatsCtrl', function($scope, $state, $ionicModal, Chats, sessionService, classes, teachers, student,parents, $ionicLoading) {
   var userType = sessionService.get("loginData").userType;
+  var myId = sessionService.get("loginData").model.id;
+  var myUserId = sessionService.get("loginData").user.id;
   var ward;
   function getChatItems(wards){
     console.log(wards);
@@ -382,6 +384,143 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $scope.contactsModal = modal;
   });
 
+  $ionicModal.fromTemplateUrl('templates/addGroupModal.html', {
+    scope: $scope
+  }).then(function(modal) {
+    $scope.addGroupModal = modal;
+  });
+
+  $ionicModal.fromTemplateUrl('templates/addChatContactModal.html', {
+    scope: $scope
+  }).then(function(modal) {
+    $scope.addChatContactModal = modal;
+  });
+
+  var schoolId = sessionService.get("loginData").model.school;
+
+
+  $scope.groupList = [];
+  $scope.group = {};
+
+  $scope.createGroup = function(){
+    if(!$scope.group.groupName || $scope.group.groupName == ''){
+      $scope.showAlert("Please enter group name");
+      return;
+    }
+    if($scope.groupList.length==0){
+      $scope.showAlert("Number of members in group has to be more than one(1)");
+      return;
+    }
+    $ionicLoading.show();
+    var memberIds = [myUserId];
+    for(var i=1;i<$scope.groupList.length+1;++i){
+      memberIds[i] = $scope.groupList[i-1].user.id;
+    }
+    var group = {
+      groupOwner: myUserId,
+      users: memberIds,
+      groupName: $scope.group.groupName
+    };
+    Chats.createGroup(group,
+      function onError(){
+        $ionicLoading.hide();
+        $scope.showAlert("Could not create group");
+      },
+      function onSuccess(){
+        $ionicLoading.hide();
+        $scope.showAlert("Group created!");
+        $scope.addGroupModal.hide();
+    });
+    $scope.groupList = [];
+  }
+
+  $scope.chatNavigate = function(item){
+    console.log(item);
+    if(item.isGroup){
+      $state.go("app.groupChat",{groupId:item.id});
+    }
+    else{
+      $state.go("app.chat-detail",{chatId:item.id});
+    }
+  }
+
+  Chats.getMyGroups(function(groups){
+    groups.forEach(function(val,index,array){
+      var obj = {
+        id:val.id,
+        name:val.groupName,
+        isGroup:true
+      };
+      console.log(obj);
+      $scope.chatItems.push(obj);
+    });
+    sessionService.persist("groups",groups);
+  });
+
+  $scope.addToList = function(item){
+    console.log(item);
+    $scope.groupList.push(item);
+  }
+
+  $scope.search = {};
+  $scope.onSearchChange = function () {
+    if($scope.search.name){
+      var str = $scope.search.name.split(' ');
+      $scope.searchCriteria = { };
+      $scope.searchCriteria.firstname = str[0];
+      if(str[1])
+      $scope.searchCriteria.lastname = str[1];
+    }
+    else{
+      $scope.searchCriteria = {};
+    }
+  }
+  $scope.parents = [];
+  $scope.teachers = [];
+  $scope.groups = [];
+  parents.getAllParentsOfSchool(schoolId, function(data){
+    var filtered = [];
+    for(var i=0;i<data.length;++i){
+      if(data[i].id != myId){
+        filtered[i] = data[i];
+      }
+    }
+    $scope.parents = filtered;
+    $scope.groups[1] = {name: "Parents",
+        items: $scope.parents};
+    sessionService.persist("parents",filtered);
+    console.log(data);
+  });
+
+  teachers.getAllTeachersOfSchool(schoolId, function(data){
+    var filtered = [];
+    for(var i=0;i<data.length;++i){
+      if(data[i].id != myId){
+        filtered[i] = data[i];
+      }
+    }
+    $scope.teachers = filtered;
+    sessionService.persist("teachers",filtered);
+    $scope.groups[0] = {name: "Teachers",
+        items: $scope.teachers};
+    console.log(data);
+  });
+
+ /*
+  * if given group is the selected group, deselect it
+  * else, select the given group
+  */
+ $scope.toggleGroup = function(group) {
+   if ($scope.isGroupShown(group)) {
+     $scope.shownGroup = null;
+   } else {
+     $scope.shownGroup = group;
+   }
+ };
+ $scope.isGroupShown = function(group) {
+   return $scope.shownGroup === group;
+ };
+
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, $ionicScrollDelegate, Chats, sessionService, parents, teachers) {
@@ -390,24 +529,31 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   var alternate, isIOS = ionic.Platform.isWebView() && ionic.Platform.isIOS();
   $scope.messages = [];
   $scope.userData = {};
-  $scope.myId = sessionService.get("loginData").model.id;
+  $scope.myId = sessionService.get("loginData").user.id;
   var userId = $stateParams.chatId; //Get user Id of who we are going to chat with
   var teacherId,parentId;
+  var chatItems = sessionService.get("chats");
+  if(!chatItems){
+    chatItems = [];
+  }
+  chatItems[userId] = {user:userId};
+  sessionService.persist("chats",chatItems);
+
   ///Retrieve user data of the person we are going to chat with. This depends on whether the current user is a parent or a teacher.
-  if(userType=="Parent"){
-    teachers.getTeacher(userId, function(data){
-      $scope.userData = data;
-    });
-    parentId = $scope.myId;
-    teacherId = userId;
-  }
-  else{
-    parents.getParent(userId, function(data){
-      $scope.userData = data;
-    });
-    parentId = userId;
-    teacherId = $scope.myId;
-  }
+  // if(userType=="Parent"){
+  //   teachers.getTeacher(userId, function(data){
+  //     $scope.userData = data;
+  //   });
+  //   parentId = $scope.myId;
+  //   teacherId = userId;
+  // }
+  // else{
+  //   parents.getParent(userId, function(data){
+  //     $scope.userData = data;
+  //   });
+  //   parentId = userId;
+  //   teacherId = $scope.myId;
+  // }
   var socketId;
   function registerSocket(){
     io.socket.get("/chats/getSocketId", function(resData, jwres) {
@@ -425,16 +571,17 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     registerSocket();
     getLatestChats();
   });
+
   function getLatestChats(cb){
     if(sessionService.get(userId)!=null){
       //sessionService.destroy(userId);
       $scope.messages = sessionService.get(userId);
     }
     var skip = $scope.messages.length;
-    Chats.getChats(teacherId,parentId,skip, function(data){
+    Chats.getChats($scope.myId,userId,skip, function(data){
       data.forEach(function (val,i,a) {
         obj = {
-          userId: val.senderId,
+          userId: val.from.id,
           text: val.message,
           time: new Date(val.time).toLocaleTimeString().replace(/:\d+ /, ' ')
         };
@@ -453,7 +600,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     console.log("Chat message received via Socket");
     console.log("Socket", msg);
     var obj = {
-      userId: msg.senderId,
+      userId: msg.from.id,
       text: msg.message,
       time: new Date(msg.time).toLocaleTimeString().replace(/:\d+ /, ' ')
     };
@@ -472,10 +619,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     var d = new Date();
     d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
     Chats.sendChat({
-      parent:parentId,
-      teacher:teacherId,
-      senderId:$scope.myId,
-      sender:userType,
+      from: $scope.myId,
+      to:userId ,
       message:$scope.data.message,
       time:new Date()
     }, function onError(){
@@ -496,7 +641,147 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
 })
+.controller('GroupChatCtrl', function($scope, $stateParams, $ionicScrollDelegate, Chats, sessionService) {
 
+  $scope.hideTime = true;
+  var userType = sessionService.get("loginData").userType;
+  var alternate, isIOS = ionic.Platform.isWebView() && ionic.Platform.isIOS();
+  $scope.messages = [];
+  $scope.myId = sessionService.get("loginData").user.id;
+  var groupId = $stateParams.groupId;
+  $scope.data = {};
+  var socketId;
+
+  function getUserFromCache(userId){
+    var parents = sessionService.get("parents");
+    var teachers = sessionService.get("teachers");
+    if(parents){
+      console.log(parents);
+      for(var i=0;i<parents.length;++i){
+        if(parents[i]==null)continue;
+        if(parents[i].user.id==userId){
+          return parents[i];
+        }
+      }
+    }
+    if(teachers){
+      for(var i=0;i<teachers.length;++i){
+        if(teachers[i].user.id==userId){
+          return teachers[i];
+        }
+      }
+    }
+    if(sessionService.get("loginData").user.id == userId){
+      return sessionService.get("loginData").model;
+    }
+    return null;
+  }
+
+  function getGroupName(groupId){
+    var groups = sessionService.get("groups");
+    for(var i=0;i<groups.length;++i){
+      if(groups[i].id==groupId){
+        return groups[i].groupName;
+      }
+    }
+  }
+  $scope.group = {groupName:getGroupName(groupId)};
+  function registerSocket(){
+    io.socket.get("/chats/getSocketId", function(resData, jwres) {
+      console.log(resData);
+      socketId = resData.socketId;
+      io.socket.post('/chats/registerSocket', { userId: $scope.myId, socketId:socketId }, function (resData) {
+        console.log("Status", resData.status);
+        console.log("Socket Id "+ socketId);
+      });
+    });
+  }
+  registerSocket();
+  io.socket.on("connect", function onConnect(){
+    registerSocket();
+    getLatestChats();
+  });
+
+  io.socket.on('groupMessage', function(msg){
+    console.log("Chat message received via Socket");
+    console.log("Socket", msg);
+    var user = getUserFromCache(msg.from.id);
+    var obj = {
+      name:user.firstname+' '+user.lastname,
+      userId: msg.from.id,
+      text: msg.message,
+      time: new Date(msg.time).toLocaleTimeString().replace(/:\d+ /, ' ')
+    };
+    $scope.messages.push(obj);
+    $scope.$apply();
+    sessionService.persist(userId, $scope.messages);
+    $ionicScrollDelegate.scrollBottom(true);
+  });
+
+  function getLatestChats(cb){
+    if(sessionService.get(groupId)!=null){
+      //sessionService.destroy(userId);
+      $scope.messages = sessionService.get(groupId);
+      if($scope.messages){
+        var messages = $scope.messages;
+        for(var i=0;i<messages.length;++i){
+            var user = getUserFromCache(messages[i].userId);
+            messages[i].name = user.firstname+' '+user.lastname;
+        }
+      }
+    }
+    var skip = $scope.messages.length;
+    Chats.getGroupChat(groupId,skip, function(data){
+      data.forEach(function (val,i,a) {
+        var user = getUserFromCache(val.from.id);
+        console.log(user);
+        obj = {
+          name:user.firstname+' '+user.lastname,
+          userId: val.from.id,
+          text: val.message,
+          time: new Date(val.time).toLocaleTimeString().replace(/:\d+ /, ' ')
+        };
+        $scope.messages.push(obj);
+        sessionService.persist(groupId,$scope.messages);
+      });
+      if(cb){
+        cb();
+      }
+      if(data.length!=0){
+        $ionicScrollDelegate.scrollBottom(true);
+      }
+    });
+  }
+  getLatestChats(function(){
+    $ionicScrollDelegate.scrollBottom(true);
+  });
+
+  $scope.sendMessage = function() {
+    var d = new Date();
+    d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+    Chats.sendGroupChat({
+      from: $scope.myId,
+      group:groupId,
+      message:$scope.data.message,
+      time:new Date()
+    }, function onError(){
+      $scope.showAlert("Could not send message. " + data.err);
+    }, function onSuccess(){
+      console.log("Group message sent!");
+    }
+    );
+    obj = {
+      userId: $scope.myId,
+      text: $scope.data.message,
+      time: d
+    };
+    $scope.messages.push(obj);
+    $ionicScrollDelegate.scrollBottom(true);
+    $scope.data.message = "";
+    console.log(obj);
+  }
+
+})
 .controller('NoticeBoardCtrl', function($scope, $http, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
   if(sessionService.get("loginData")==null){
     $state.go("app.login");
