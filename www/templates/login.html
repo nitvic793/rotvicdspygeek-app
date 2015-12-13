@@ -1,0 +1,34 @@
+<ion-view view-title="Login" hide-back-button="true" hide-nav-bar="true">
+  <ion-header-bar>
+    <h1 class="title">Login</h1>
+    <!-- <div class="buttons">
+      <button class="button button-clear" ng-click="closeLogin()">Close</button>
+    </div> -->
+  </ion-header-bar>
+  <ion-content>
+    <form ng-submit="doLogin()">
+      <div class="list">
+        <label class="item item-input">
+          <span class="input-label">Email</span>
+          <input type="email" ng-model="loginData.email" placeholder="Email" required>
+        </label>
+        <label class="item item-input ">
+          <span class="input-label">Password</span>
+          <input type="password" ng-model="loginData.password" placeholder="Password" required="required">
+        </label>
+        <label class="item">
+        	<ion-radio ng-model="loginData.userType" ng-value="'Teacher'">Teacher</ion-radio>
+        	<ion-radio ng-model="loginData.userType" ng-value="'Parent'">Parent</ion-radio>
+    	   </label>
+        <label class="item">
+          <button class="button button-block button-positive" type="submit">Log in</button>
+        </label>
+        <label class="item">
+        <button class="button button-block button-positive" href="#/app/signup" ui-sref="app.signup">Sign Up</button>
+        </label>
+      </div>
+    </form>
+    <!--Sign up button-->
+
+  </ion-content>
+</ion-modal-view>
