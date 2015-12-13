@@ -20,7 +20,7 @@
           </ion-item>
           <ion-item class="item-accordion"
                     ng-repeat="item in group.items | filter:searchCriteria"
-                    ng-show="isGroupShown(group)" href="#/app/chats/{{item.user.id}}" ng-click="contactsModal.hide()">
+                    ng-show="isGroupShown(group)" href="#/app/chats/{{item.user.id}}" ng-click="contactsModal.hide();addUserToList(item)">
             {{item.firstname}} {{item.lastname}}
           </ion-item>
         </div>

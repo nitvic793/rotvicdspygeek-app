@@ -1,6 +1,6 @@
 <ion-view view-title="Chats" class="container" cache-view="false">
   <ion-nav-buttons side="right">
-     <button class="button button-icon ion-plus" ng-click="addGroupModal.show()"></button>
+     <button class="button button-icon ion-plus" ng-click="addGroupModal.show()" ng-hide="isParent"></button>
      <button class="button button-icon ion-person" ng-click="contactsModal.show()"></button>
   </ion-nav-buttons>
   <ion-content>

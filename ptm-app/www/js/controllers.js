@@ -317,67 +317,20 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   var myId = sessionService.get("loginData").model.id;
   var myUserId = sessionService.get("loginData").user.id;
   var ward;
-  function getChatItems(wards){
-    console.log(wards);
-    wards.forEach(function(val,i,a){
-      classes.getTeachersOfClass(val.student.class, function(data){
-        for(i=0;i<data.length;++i){
-          name = data[i].teacher.firstname+' '+data[i].teacher.lastname;
-          subject = data[i].subject.subjectname;
-          $scope.chatItems[i] = {
-            id:data[i].teacher.id,
-            name:name,
-            subject: subject
-          };
-        }
-        $ionicLoading.hide();
-      });
-    });
-  }
   $scope.chatItems = [];
-  if(userType=='Parent'){
-    $ionicLoading.show();
-    var wards = sessionService.get("wards");
-    if(!wards || wards.length==0){
-        student.getWardsOfParent(sessionService.get("loginData").model, function(data){
-          sessionService.store("wards",data);
-          getChatItems(data);
-        });
-    }
-    else{
-      getChatItems(wards);
-    }
 
-  }
-  else {
-    var loginData = sessionService.get("loginData");
-    var user = loginData.model;
-    var teacherId = loginData.model.id;
-    teachers.getAllClassesOfTeacher(teacherId, function(data){
-      $ionicLoading.show();
-      data.forEach(function(element,index,array){
-        classId = element.class.id;
-        student.getStudentsOfClass(classId, function(students){
-          students.forEach(function(val,i,a){
-            student.getWardDataOfStudent(val.id,function(wards){
-              $ionicLoading.hide();
-              wards.forEach(function(ward,ind,arr){
-                console.log(ward);
-                name = ward.parent.firstname + ' ' + ward.parent.lastname;
-                subject = element.class.standard+' '+element.class.section + ', ' + ward.type + ', ' + ward.student.firstName + ' ' + ward.student.lastName;
-                $scope.chatItems.push({
-                  id:ward.parent.id,
-                  name:name,
-                  subject: subject
-                });
-              });
-            });
-          });
+  function getUserChats(){
+    var items = sessionService.get("chatUsers");
+    if(items!=null){
+      items.forEach(function(val,index,array){
+        $scope.chatItems.push({
+          id:val.user.id,
+          name:val.firstname + ' ' + val.lastname,
         });
       });
-    });
+    }
   }
-
+  getUserChats();
   $ionicModal.fromTemplateUrl('templates/chatContactsModal.html', {
     scope: $scope
   }).then(function(modal) {
@@ -433,6 +386,29 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     });
     $scope.groupList = [];
   }
+  function containsUser(items, user, cb){
+      for(var i=0;i<items.length;++i){
+        if(items[i].id == user.id){
+          cb(true);
+          return;
+        }
+      }
+      cb(false);
+  }
+
+  $scope.addUserToList = function(item){
+    var items = sessionService.get("chatUsers");
+    if(items==null){
+      items = [];
+    }
+    containsUser(items,item,function(contains){
+      if(!contains){
+        items.push(item);
+        sessionService.persist("chatUsers",items);
+        console.log("Added");
+      }
+    });
+  }
 
   $scope.chatNavigate = function(item){
     console.log(item);
@@ -444,18 +420,24 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     }
   }
 
-  Chats.getMyGroups(function(groups){
-    groups.forEach(function(val,index,array){
-      var obj = {
-        id:val.id,
-        name:val.groupName,
-        isGroup:true
-      };
-      console.log(obj);
-      $scope.chatItems.push(obj);
+  function loadGroups(){
+    $ionicLoading.show();
+    Chats.getMyGroups(function(groups){
+      groups.forEach(function(val,index,array){
+        var obj = {
+          id:val.id,
+          name:val.groupName,
+          isGroup:true
+        };
+        console.log(obj);
+        $scope.chatItems.push(obj);
+      });
+      $ionicLoading.hide();
+      sessionService.persist("groups",groups);
     });
-    sessionService.persist("groups",groups);
-  });
+  }
+
+  loadGroups();
 
   $scope.addToList = function(item){
     console.log(item);
@@ -539,21 +521,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   chatItems[userId] = {user:userId};
   sessionService.persist("chats",chatItems);
 
-  ///Retrieve user data of the person we are going to chat with. This depends on whether the current user is a parent or a teacher.
-  // if(userType=="Parent"){
-  //   teachers.getTeacher(userId, function(data){
-  //     $scope.userData = data;
-  //   });
-  //   parentId = $scope.myId;
-  //   teacherId = userId;
-  // }
-  // else{
-  //   parents.getParent(userId, function(data){
-  //     $scope.userData = data;
-  //   });
-  //   parentId = userId;
-  //   teacherId = $scope.myId;
-  // }
+  function getUserData(){
+    var chatUser =  Chats.getUserFromCache(userId);
+    if(chatUser){
+      $scope.userData = chatUser;
+    }
+  }
+  getUserData();
   var socketId;
   function registerSocket(){
     io.socket.get("/chats/getSocketId", function(resData, jwres) {
@@ -573,8 +547,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   });
 
   function getLatestChats(cb){
+    //sessionService.destroy(userId);
     if(sessionService.get(userId)!=null){
-      //sessionService.destroy(userId);
       $scope.messages = sessionService.get(userId);
     }
     var skip = $scope.messages.length;
@@ -651,12 +625,11 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   var groupId = $stateParams.groupId;
   $scope.data = {};
   var socketId;
-
+  var currentUserName = sessionService.get("loginData").model.firstname + " " + sessionService.get("loginData").model.lastname;
   function getUserFromCache(userId){
     var parents = sessionService.get("parents");
     var teachers = sessionService.get("teachers");
     if(parents){
-      console.log(parents);
       for(var i=0;i<parents.length;++i){
         if(parents[i]==null)continue;
         if(parents[i].user.id==userId){
@@ -666,6 +639,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     }
     if(teachers){
       for(var i=0;i<teachers.length;++i){
+        if(teachers[i]==null)continue;
         if(teachers[i].user.id==userId){
           return teachers[i];
         }
@@ -705,7 +679,11 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   io.socket.on('groupMessage', function(msg){
     console.log("Chat message received via Socket");
     console.log("Socket", msg);
-    var user = getUserFromCache(msg.from.id);
+    if(msg.from==$scope.myId){
+      return;
+    }
+    var user = getUserFromCache(msg.from);
+    console.log(user);
     var obj = {
       name:user.firstname+' '+user.lastname,
       userId: msg.from.id,
@@ -714,27 +692,28 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     };
     $scope.messages.push(obj);
     $scope.$apply();
-    sessionService.persist(userId, $scope.messages);
+    sessionService.persist(groupId, $scope.messages);
     $ionicScrollDelegate.scrollBottom(true);
   });
 
   function getLatestChats(cb){
+    sessionService.destroy(groupId);
     if(sessionService.get(groupId)!=null){
-      //sessionService.destroy(userId);
       $scope.messages = sessionService.get(groupId);
       if($scope.messages){
         var messages = $scope.messages;
         for(var i=0;i<messages.length;++i){
             var user = getUserFromCache(messages[i].userId);
+            if(messages[i].userId)
             messages[i].name = user.firstname+' '+user.lastname;
         }
       }
     }
     var skip = $scope.messages.length;
     Chats.getGroupChat(groupId,skip, function(data){
+      console.log(data);
       data.forEach(function (val,i,a) {
         var user = getUserFromCache(val.from.id);
-        console.log(user);
         obj = {
           name:user.firstname+' '+user.lastname,
           userId: val.from.id,
@@ -771,6 +750,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     }
     );
     obj = {
+      name:currentUserName,
       userId: $scope.myId,
       text: $scope.data.message,
       time: d
@@ -959,6 +939,41 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       });
     }
   }
+
+  function updateNoticeBoardWithLoader(){
+    $ionicLoading.show();
+    $scope.notices = [];
+    $scope.noticeImages = [];
+    userType = sessionService.get("loginData").userType;
+    model = sessionService.get("loginData").model;
+    console.log("Getting notice board: " + userType);
+    console.log("UserId: "+ model.id);
+    if(userType=='Teacher'){
+      noticeBoard.getAllNotices(function(notices){
+        if(notices==null){
+          $scope.showAlert("Unable to update noticeboard! Check network connection");
+        }
+        $scope.notices = notices;
+        getImages($scope.notices);
+        $ionicLoading.hide();
+        $scope.$broadcast('scroll.refreshComplete');
+      });
+    }
+    else {
+      wards.forEach(function(val,i,a){
+        noticeBoard.getNoticesOfClass(val.student.class,function(notices){
+          if(notices==null){
+            $scope.showAlert("Unable to update noticeboard! Check network connection");
+          }
+          Array.prototype.push.apply($scope.notices,notices);
+          getImages($scope.notices);
+          $ionicLoading.hide();
+          $scope.$broadcast('scroll.refreshComplete');
+        });
+      });
+    }
+  }
+
   $scope.refresh = updateNoticeBoard;
   $scope.doRefresh = updateNoticeBoard;
   //updateNoticeBoard();
@@ -981,9 +996,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $scope.showAlert(err);
       $ionicLoading.hide();
     }, function(){
-      updateNoticeBoard();
       $ionicLoading.hide();
       $scope.noticeModal.hide();
+      updateNoticeBoardWithLoader();
     });
   }
 
@@ -994,15 +1009,15 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         if(!wards || wards.length==0){
         student.getWardsOfParent(model,function(data){
           wards = data;
-          updateNoticeBoard();
+            updateNoticeBoardWithLoader();
           });
         }
         else{
-          updateNoticeBoard();
+            updateNoticeBoardWithLoader();
         }
       }
       else {
-        updateNoticeBoard();
+          updateNoticeBoardWithLoader();
       }
     });
 

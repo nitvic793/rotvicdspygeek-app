@@ -101,8 +101,36 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
       if(!skip){
         skip = 0;
       }
-      var getUrl = url + "?group="+groupId+'&skip='+skip;
+      var getUrl = url + "?group="+groupId+'&skip='+skip+'&sort=createdAt ASC';
       genericGetAll($http,getUrl,cb);
+    },
+    getMyUsers: function(userId,cb){
+      var getUrl = url + "/distinctChatUsers?userid="+userId;
+      genericGetAll($http, getUrl, cb);
+    },
+    getUserFromCache: function(userId){
+      var parents = sessionService.get("parents");
+      var teachers = sessionService.get("teachers");
+      if(parents){
+        for(var i=0;i<parents.length;++i){
+          if(parents[i]==null)continue;
+          if(parents[i].user.id==userId){
+            return parents[i];
+          }
+        }
+      }
+      if(teachers){
+        for(var i=0;i<teachers.length;++i){
+          if(teachers[i]==null)continue;
+          if(teachers[i].user.id==userId){
+            return teachers[i];
+          }
+        }
+      }
+      if(sessionService.get("loginData").user.id == userId){
+        return sessionService.get("loginData").model;
+      }
+      return null;
     }
   };
 })
