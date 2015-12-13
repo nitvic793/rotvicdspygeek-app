@@ -383,6 +383,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         $ionicLoading.hide();
         $scope.showAlert("Group created!");
         $scope.addGroupModal.hide();
+        loadGroups();
     });
     $scope.groupList = [];
   }
