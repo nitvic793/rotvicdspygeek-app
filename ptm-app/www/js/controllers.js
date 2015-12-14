@@ -88,12 +88,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     $state.go("app.login");
   }
   $rootScope.toggleDrag = false;
-  $scope.officeHours = false;
+  $rootScope.officeHours = sessionService.get("officeHours");
   $scope.schools = [];
   school.getAll(function(data){
     $scope.schools = data;
   });
   $rootScope.isParent = true;
+
 
   // Form data for the login modal
   $scope.loginData = {
@@ -420,11 +421,11 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $state.go("app.chat-detail",{chatId:item.id});
     }
   }
-
-  function loadGroups(){
-    $ionicLoading.show();
-    Chats.getMyGroups(function(groups){
-      groups.forEach(function(val,index,array){
+  function loadGroupsCache(){
+    groups = sessionService.get("groups");
+    if(groups!=null)
+    {
+        groups.forEach(function(val,index,array){
         var obj = {
           id:val.id,
           name:val.groupName,
@@ -433,7 +434,33 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         console.log(obj);
         $scope.chatItems.push(obj);
       });
-      $ionicLoading.hide();
+    }
+  }
+  function contains(obj,array){
+    for(var i=0;i<array.length;++i){
+      if(obj.id==array[i].id){
+        return true;
+      }
+    }
+    return false;
+  }
+  loadGroupsCache();
+  function loadGroups(){
+    //$ionicLoading.show();
+    var groupsCache = sessionService.get("groups");
+    Chats.getMyGroups(function(groups){
+      groups.forEach(function(val,index,array){
+        var obj = {
+          id:val.id,
+          name:val.groupName,
+          isGroup:true
+        };
+        if(!contains(obj,groups)){
+          $scope.chatItems.push(obj);
+        }
+        console.log(obj);
+      });
+      //$ionicLoading.hide();
       sessionService.persist("groups",groups);
     });
   }
@@ -763,7 +790,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
 })
-.controller('NoticeBoardCtrl', function($scope, $http, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
+.controller('NoticeBoardCtrl', function($rootScope, $scope, $http, noticeBoard, $state, $ionicModal,$cordovaCamera,$ionicLoading, $ionicHistory, sessionService, classes, student, urlConfig, images){
   if(sessionService.get("loginData")==null){
     $state.go("app.login");
     return;
@@ -771,6 +798,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   else{
     //Need to check token expiration and ask for re login if needed
   }
+
   $http.defaults.headers.common.Authorization = "Bearer " + sessionService.get("loginData").token;
   var userType = sessionService.get("loginData").userType;
   var model = sessionService.get("loginData").model;
@@ -917,6 +945,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     console.log("UserId: "+ model.id);
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
+        sessionService.store("notices"+model.id,notices);
         if(notices==null){
           $scope.showAlert("Unable to update noticeboard! Check network connection");
         }
@@ -928,6 +957,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     }
     else {
       wards.forEach(function(val,i,a){
+        sessionService.store("notices"+model.id,notices);
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
           if(notices==null){
             $scope.showAlert("Unable to update noticeboard! Check network connection");
@@ -951,6 +981,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     console.log("UserId: "+ model.id);
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
+        sessionService.store("notices"+model.id,notices);
         if(notices==null){
           $scope.showAlert("Unable to update noticeboard! Check network connection");
         }
@@ -963,6 +994,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     else {
       wards.forEach(function(val,i,a){
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
+          sessionService.store("notices"+model.id,notices);
           if(notices==null){
             $scope.showAlert("Unable to update noticeboard! Check network connection");
           }
@@ -1294,11 +1326,42 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
      });
    }
 })
-.controller('SettingsCtrl', function($scope, $rootScope, $stateParams, sessionService) {
+.controller('SettingsCtrl', function($scope, $rootScope, $stateParams, sessionService, teachers, parents) {
+  $scope.currentOfficeHours = {};
+  if(sessionService.get("officeHours")!=null){
+    console.log(sessionService.get("officeHours"));
+    $scope.currentOfficeHours.checked = sessionService.get("officeHours");
+    $rootScope.officeHours = sessionService.get("officeHours");
+  }
+  console.log($scope.currentOfficeHours);
   $scope.isParent = isCurrentUserAParent(sessionService);
   settings = sessionService.get("loginData").model.settings;
   if(settings && isOfficeHours(settings)){
     $rootScope.officeHours = true;
+  }
+  $scope.saveOfficeHours = function(){
+    console.log($scope.currentOfficeHours.checked);
+    sessionService.store("officeHours", $scope.currentOfficeHours.checked);
+    $rootScope.officeHours = $scope.currentOfficeHours.checked;
+    var model = sessionService.get("loginData").model;
+    var userType = sessionService.get("loginData").userType;
+    model.officeHours = $rootScope.officeHours;
+    if(userType=="Parent"){
+      parents.updateParent(model,function(){
+        console.log("office Hours saved!");
+      },
+      function(){
+        console.log("Could not save office hour");
+      });
+    }
+    else{
+      teachers.updateTeacher(model,function(){
+        console.log("office Hours saved!");
+      },
+      function(){
+        console.log("Could not save office hour");
+      });
+    }
   }
   console.log($rootScope.officeHours);
 
