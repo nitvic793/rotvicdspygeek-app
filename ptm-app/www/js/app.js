@@ -4,7 +4,7 @@
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics', 'starter.controllers', 'starter.services'])
+angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics', 'starter.controllers', 'starter.services','ngIOS9UIWebViewPatch'])
 
 .run(function($ionicPlatform, $ionicAnalytics, $cordovaPush, sessionService, $state) {
   $ionicPlatform.ready(function() {
