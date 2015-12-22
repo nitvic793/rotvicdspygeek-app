@@ -251,8 +251,8 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
         successCb();
       });
     },
-    getAllNotices : function (callback) {
-      var getUrl = url+"/?sort=createdAt DESC";
+    getAllNotices : function (callback, skip) {
+      var getUrl = url+"/?sort=createdAt DESC&limit=100&skip="+skip;
       $http.get(getUrl).then(function(res){
           callback(res.data);
         },
@@ -261,8 +261,8 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
         }
       );
     },
-    getNoticesOfClass: function(classId, callback){
-      var classUrl = url+"/?sort=createdAt DESC&class="+classId;
+    getNoticesOfClass: function(classId, callback, skip){
+      var classUrl = url+"/?sort=createdAt DESC&class="+classId+"&limit=100&skip="+skip;
       genericGetAll($http,classUrl,callback);
     }
   };

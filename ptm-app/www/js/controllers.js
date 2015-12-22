@@ -321,7 +321,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   $scope.chatItems = [];
 
   function getUserChats(){
-    var items = sessionService.get("chatUsers");
+    var items = sessionService.get("chatUsers_"+myId);
     if(items!=null){
       items.forEach(function(val,index,array){
         $scope.chatItems.push({
@@ -399,14 +399,14 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
   $scope.addUserToList = function(item){
-    var items = sessionService.get("chatUsers");
+    var items = sessionService.get("chatUsers_"+myId);
     if(items==null){
       items = [];
     }
     containsUser(items,item,function(contains){
       if(!contains){
         items.push(item);
-        sessionService.persist("chatUsers",items);
+        sessionService.persist("chatUsers_"+myId,items);
         console.log("Added");
       }
     });
@@ -422,7 +422,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     }
   }
   function loadGroupsCache(){
-    groups = sessionService.get("groups");
+    groups = sessionService.get("groups_"+myId);
     if(groups!=null)
     {
         groups.forEach(function(val,index,array){
@@ -447,7 +447,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   loadGroupsCache();
   function loadGroups(){
     //$ionicLoading.show();
-    var groupsCache = sessionService.get("groups");
+    var groupsCache = sessionService.get("groups_"+myId);
     Chats.getMyGroups(function(groups){
       groups.forEach(function(val,index,array){
         var obj = {
@@ -461,7 +461,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         console.log(obj);
       });
       //$ionicLoading.hide();
-      sessionService.persist("groups",groups);
+      sessionService.persist("groups_"+myId,groups);
     });
   }
 
@@ -576,7 +576,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
   function getLatestChats(cb){
     //sessionService.destroy(userId);
-    if(sessionService.get(userId)!=null){
+    if(sessionService.get($scope.myId+'_'+userId)!=null){
       $scope.messages = sessionService.get(userId);
     }
     var skip = $scope.messages.length;
@@ -588,7 +588,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           time: new Date(val.time).toLocaleTimeString().replace(/:\d+ /, ' ')
         };
         $scope.messages.push(obj);
-        sessionService.persist(userId,$scope.messages);
+        sessionService.persist($scope.myId+'_'+userId,$scope.messages);
       });
       if(cb){
         cb();
@@ -608,7 +608,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     };
     $scope.messages.push(obj);
     $scope.$apply();
-    sessionService.persist(userId, $scope.messages);
+    sessionService.persist($scope.myId+'_'+userId, $scope.messages);
     $ionicScrollDelegate.scrollBottom(true);
 
   });
@@ -650,6 +650,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   var alternate, isIOS = ionic.Platform.isWebView() && ionic.Platform.isIOS();
   $scope.messages = [];
   $scope.myId = sessionService.get("loginData").user.id;
+  var modelId = sessionService.get("loginData").model.id;
   var groupId = $stateParams.groupId;
   $scope.data = {};
   var socketId;
@@ -680,7 +681,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   }
 
   function getGroupName(groupId){
-    var groups = sessionService.get("groups");
+    var groups = sessionService.get("groups_"+modelId);
     for(var i=0;i<groups.length;++i){
       if(groups[i].id==groupId){
         return groups[i].groupName;
@@ -943,30 +944,40 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     model = sessionService.get("loginData").model;
     console.log("Getting notice board: " + userType);
     console.log("UserId: "+ model.id);
+    var cacheNotices = sessionService.get("notices"+model.id);
+    var skip = 0;
+    if(cacheNotices!=null){
+    //  $scope.notices = cacheNotices;
+      skip = cacheNotices.length;
+    }
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
-        sessionService.store("notices"+model.id,notices);
+        console.log(notices);
         if(notices==null){
           $scope.showAlert("Unable to update noticeboard! Check network connection");
         }
-        $scope.notices = notices;
+        for(var i=0;i<notices.length;++i){
+          $scope.notices.push(notices[i]);
+        }
         getImages($scope.notices);
-      //  $ionicLoading.hide();
+        sessionService.store("notices"+model.id,$scope.notices);
         $scope.$broadcast('scroll.refreshComplete');
-      });
+      },0);
     }
     else {
       wards.forEach(function(val,i,a){
-        sessionService.store("notices"+model.id,notices);
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
           if(notices==null){
             $scope.showAlert("Unable to update noticeboard! Check network connection");
           }
-          Array.prototype.push.apply($scope.notices,notices);
+          for(var i=0;i<notices.length;++i){
+            $scope.notices.push(notices[i]);
+          }
+          sessionService.store("notices"+model.id,$scope.notices);
           getImages($scope.notices);
           $ionicLoading.hide();
           $scope.$broadcast('scroll.refreshComplete');
-        });
+        },skip);
       });
     }
   }
@@ -979,30 +990,45 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     model = sessionService.get("loginData").model;
     console.log("Getting notice board: " + userType);
     console.log("UserId: "+ model.id);
+    var cacheNotices = sessionService.get("notices"+model.id);
+    var skip = 0;
+    if(cacheNotices!=null){
+    //  $scope.notices = cacheNotices;
+      skip = cacheNotices.length;
+    }
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
-        sessionService.store("notices"+model.id,notices);
+        console.log(notices, skip);
+
         if(notices==null){
           $scope.showAlert("Unable to update noticeboard! Check network connection");
         }
-        $scope.notices = notices;
+        else{
+          for(var i=0;i<notices.length;++i){
+            $scope.notices.push(notices[i]);
+          }
+        }
         getImages($scope.notices);
+        sessionService.store("notices"+model.id,$scope.notices);
         $ionicLoading.hide();
         $scope.$broadcast('scroll.refreshComplete');
-      });
+      }, 0);
     }
     else {
       wards.forEach(function(val,i,a){
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
-          sessionService.store("notices"+model.id,notices);
           if(notices==null){
             $scope.showAlert("Unable to update noticeboard! Check network connection");
           }
-          Array.prototype.push.apply($scope.notices,notices);
+          for(var i=0;i<notices.length;++i){
+            $scope.notices.push(notices[i]);
+          }
+        //  Array.prototype.push.apply($scope.notices,notices);
           getImages($scope.notices);
+          sessionService.store("notices"+model.id,$scope.notices);
           $ionicLoading.hide();
           $scope.$broadcast('scroll.refreshComplete');
-        });
+        }, skip);
       });
     }
   }
