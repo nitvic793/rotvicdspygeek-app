@@ -579,7 +579,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     if(sessionService.get($scope.myId+'_'+userId)!=null){
       $scope.messages = sessionService.get(userId);
     }
-    var skip = $scope.messages.length;
+    var skip = 0;
+    if($scope.messages!=null){
+      skip = $scope.messages.length;
+    }
+    else{
+      $scope.messages = [];
+    }
     Chats.getChats($scope.myId,userId,skip, function(data){
       data.forEach(function (val,i,a) {
         obj = {
