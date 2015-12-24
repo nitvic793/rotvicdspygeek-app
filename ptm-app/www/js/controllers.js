@@ -941,7 +941,16 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       }
     });
   }
-
+  function getRecentTime(notices){
+    var time = notices[0].createdAt;
+    for(var i=0;i<notices.length;++i){
+      if(new Date(time)<new Date(notices[i].createdAt)){
+        time = notices[i].createdAt;
+      }
+    }
+    return time;
+  }
+//  sessionService.destroy("notices"+model.id);
   function updateNoticeBoard(){
     //$ionicLoading.show();
     $scope.notices = [];
@@ -953,12 +962,45 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     var cacheNotices = sessionService.get("notices"+model.id);
     var skip = 0;
     if(cacheNotices!=null){
-    //  $scope.notices = cacheNotices;
-      skip = cacheNotices.length;
+      var time = getRecentTime(cacheNotices);
+      $scope.notices = cacheNotices;
+      if(userType=='Teacher'){
+        noticeBoard.getNoticesAfter(time,function(notices){
+          if(notices==null){
+            $scope.showAlert("Unable to update noticeboard! Check network connection");
+          }
+          for(var i=0;i<notices.length;++i){
+            $scope.notices.push(notices[i]);
+          }
+          getImages($scope.notices);
+          sessionService.store("notices"+model.id,$scope.notices);
+          $scope.$broadcast('scroll.refreshComplete');
+        });
+      }
+      else {
+        for(i=0;i<wards.length;++i){
+          var val = wards[i];
+          noticeBoard.getNoticesAfterOfClass(time,val.student.class,function(notices){
+            if(notices==null){
+              $scope.showAlert("Unable to update noticeboard! Check network connection");
+            }
+            for(var i=0;i<notices.length;++i){
+              $scope.notices.push(notices[i]);
+            }
+            getImages($scope.notices);
+            $ionicLoading.hide();
+            $scope.$broadcast('scroll.refreshComplete');
+            $scope.notices.sort(function(a,b){
+              return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+            sessionService.store("notices"+model.id,$scope.notices);
+          });
+        }
+      }
+      return;
     }
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
-        console.log(notices);
         if(notices==null){
           $scope.showAlert("Unable to update noticeboard! Check network connection");
         }
@@ -971,7 +1013,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       },0);
     }
     else {
-      wards.forEach(function(val,i,a){
+      for(i=0;i<wards.length;++i){
+        var val = wards[i];
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
           if(notices==null){
             $scope.showAlert("Unable to update noticeboard! Check network connection");
@@ -979,12 +1022,15 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           for(var i=0;i<notices.length;++i){
             $scope.notices.push(notices[i]);
           }
-          sessionService.store("notices"+model.id,$scope.notices);
           getImages($scope.notices);
           $ionicLoading.hide();
           $scope.$broadcast('scroll.refreshComplete');
-        },skip);
-      });
+          $scope.notices.sort(function(a,b){
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+          sessionService.store("notices"+model.id,$scope.notices);
+        },0);
+      }
     }
   }
 
@@ -999,15 +1045,52 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     var cacheNotices = sessionService.get("notices"+model.id);
     var skip = 0;
     if(cacheNotices!=null){
-    //  $scope.notices = cacheNotices;
-      skip = cacheNotices.length;
+      var time = getRecentTime(cacheNotices);
+      $scope.notices = cacheNotices;
+      if(userType=='Teacher'){
+        noticeBoard.getNoticesAfter(time,function(notices){
+          $ionicLoading.hide();
+          if(notices==null){
+            $scope.showAlert("Unable to update noticeboard! Check network connection");
+            return;
+          }
+          for(var i=0;i<notices.length;++i){
+            $scope.notices.push(notices[i]);
+          }
+          getImages($scope.notices);
+          sessionService.store("notices"+model.id,$scope.notices);
+          $scope.$broadcast('scroll.refreshComplete');
+        });
+      }
+      else {
+        for(i=0;i<wards.length;++i){
+          var val = wards[i];
+          noticeBoard.getNoticesAfterOfClass(time,val.student.class,function(notices){
+            $ionicLoading.hide();
+            if(notices==null){
+              $scope.showAlert("Unable to update noticeboard! Check network connection");
+              return;
+            }
+            for(var i=0;i<notices.length;++i){
+              $scope.notices.push(notices[i]);
+            }
+            getImages($scope.notices);
+            $scope.$broadcast('scroll.refreshComplete');
+            $scope.notices.sort(function(a,b){
+              return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+            sessionService.store("notices"+model.id,$scope.notices);
+          });
+        }
+      }
+      return;
     }
     if(userType=='Teacher'){
       noticeBoard.getAllNotices(function(notices){
-        console.log(notices, skip);
-
+        $ionicLoading.hide();
         if(notices==null){
           $scope.showAlert("Unable to update noticeboard! Check network connection");
+          return;
         }
         else{
           for(var i=0;i<notices.length;++i){
@@ -1016,26 +1099,29 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
         }
         getImages($scope.notices);
         sessionService.store("notices"+model.id,$scope.notices);
-        $ionicLoading.hide();
         $scope.$broadcast('scroll.refreshComplete');
       }, 0);
     }
     else {
-      wards.forEach(function(val,i,a){
+      for(i=0;i<wards.length;++i){
+        var val = wards[i];
         noticeBoard.getNoticesOfClass(val.student.class,function(notices){
+          $ionicLoading.hide();
           if(notices==null){
             $scope.showAlert("Unable to update noticeboard! Check network connection");
+            return;
           }
           for(var i=0;i<notices.length;++i){
             $scope.notices.push(notices[i]);
           }
-        //  Array.prototype.push.apply($scope.notices,notices);
           getImages($scope.notices);
-          sessionService.store("notices"+model.id,$scope.notices);
-          $ionicLoading.hide();
           $scope.$broadcast('scroll.refreshComplete');
-        }, skip);
-      });
+          $scope.notices.sort(function(a,b){
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+          sessionService.store("notices"+model.id,$scope.notices);
+        },0);
+      }
     }
   }
 

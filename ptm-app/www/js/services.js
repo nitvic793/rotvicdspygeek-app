@@ -264,6 +264,14 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
     getNoticesOfClass: function(classId, callback, skip){
       var classUrl = url+"/?sort=createdAt DESC&class="+classId+"&limit=100&skip="+skip;
       genericGetAll($http,classUrl,callback);
+    },
+    getNoticesAfter: function(createdAt,callback){
+      var getUrl = url+'?where={"createdAt":{">":"'+createdAt+'"}}&limit=0&sort=createdAt DESC';
+      genericGetAll($http,getUrl,callback);
+    },
+    getNoticesAfterOfClass: function(createdAt,classId,callback){
+      var getUrl = url + '?where={"createdAt":{">":"'+createdAt+'"},"class":"'+classId+'"}&limit=0&sort=createdAt%20DESC';
+      genericGetAll($http,getUrl,callback);
     }
   };
 })
