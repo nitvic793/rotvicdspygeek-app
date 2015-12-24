@@ -997,6 +997,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           });
         }
       }
+      $scope.notices.sort(function(a,b){
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
       return;
     }
     if(userType=='Teacher'){
@@ -1083,6 +1086,9 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
           });
         }
       }
+      $scope.notices.sort(function(a,b){
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
       return;
     }
     if(userType=='Teacher'){
@@ -1150,6 +1156,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $ionicLoading.hide();
       $scope.noticeModal.hide();
       updateNoticeBoardWithLoader();
+
     });
   }
 
