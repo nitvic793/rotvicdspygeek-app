@@ -4,11 +4,50 @@
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics', 'starter.controllers', 'starter.services'])
+angular.module('ngIOS9UIWebViewPatch', ['ng']).config(['$provide', function($provide) {
+  'use strict';
+
+  $provide.decorator('$browser', ['$delegate', '$window', function($delegate, $window) {
+
+    if (isIOS9UIWebView($window.navigator.userAgent)) {
+      return applyIOS9Shim($delegate);
+    }
+
+    return $delegate;
+
+    function isIOS9UIWebView(userAgent) {
+      return /(iPhone|iPad|iPod).* OS 9_\d/.test(userAgent) && !/Version\/9\./.test(userAgent);
+    }
+
+    function applyIOS9Shim(browser) {
+      var pendingLocationUrl = null;
+      var originalUrlFn = browser.url;
+
+      browser.url = function() {
+        if (arguments.length) {
+          pendingLocationUrl = arguments[0];
+          return originalUrlFn.apply(browser, arguments);
+        }
+
+        return pendingLocationUrl || originalUrlFn.apply(browser, arguments);
+      };
+
+      window.addEventListener('popstate', clearPendingLocationUrl, false);
+      window.addEventListener('hashchange', clearPendingLocationUrl, false);
+
+      function clearPendingLocationUrl() {
+        pendingLocationUrl = null;
+      }
+
+      return browser;
+    }
+  }]);
+}]);
+angular.module('starter', ['ionic', 'ionic.service.core', 'ionic.service.analytics', 'starter.controllers', 'starter.services', 'ngIOS9UIWebViewPatch'])
 
 .run(function($ionicPlatform, $ionicAnalytics, $cordovaPush, sessionService, $state) {
   $ionicPlatform.ready(function() {
-     $ionicAnalytics.register();
+    $ionicAnalytics.register();
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
     if (window.cordova && window.cordova.plugins.Keyboard) {
@@ -21,21 +60,21 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
       StatusBar.styleDefault();
     }
     var config = null;
-    if(Ionic && Ionic.Push){
-    var push = new Ionic.Push({
-      "debug": true,
-      "onNotification": function(notification) {
-        var payload = notification.payload;
-        console.log(notification, payload);
-      },
-      "onRegister": function(data) {
-        console.log(data.token);
+    if (Ionic && Ionic.Push) {
+      var push = new Ionic.Push({
+        "debug": true,
+        "onNotification": function(notification) {
+          var payload = notification.payload;
+          console.log(notification, payload);
+        },
+        "onRegister": function(data) {
+          console.log(data.token);
+        }
+      });
+      var callback = function(pushToken) {
+        console.log(pushToken.token); //Save token to db
       }
-    });
-    var callback = function(pushToken) {
-      console.log(pushToken.token); //Save token to db
-    }
-    push.register(callback);
+      push.register(callback);
     }
     // if(sessionService.get('loginData')!=null){
     //   $state.go('app.browse');
@@ -92,60 +131,60 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
   })
 
   .state('app.search', {
-    url: '/search',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/logout.html'
+      url: '/search',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/logout.html'
+        }
       }
-    }
-  })
-  .state('app.setOfficeHours', {
-    url: '/set-office-hours',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/set-office-hours.html',
-        controller:'OfficeHoursCtrl'
+    })
+    .state('app.setOfficeHours', {
+      url: '/set-office-hours',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/set-office-hours.html',
+          controller: 'OfficeHoursCtrl'
+        }
       }
-    }
-  })
+    })
 
   .state('app.studentReview', {
-    url: '/student-review',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/student-review.html',
-        controller : 'StudentReviewCtrl'
+      url: '/student-review',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/student-review.html',
+          controller: 'StudentReviewCtrl'
+        }
       }
-    }
-  })
-  .state('app.myWard', {
-    url: '/my-ward',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/myward.html',
-        controller : 'MyWardCtrl'
+    })
+    .state('app.myWard', {
+      url: '/my-ward',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/myward.html',
+          controller: 'MyWardCtrl'
+        }
       }
-    }
-  })
-  .state('app.addWard', {
-    url: '/settings/addWard',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/addWard.html',
-        controller : 'AddWardCtrl'
+    })
+    .state('app.addWard', {
+      url: '/settings/addWard',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/addWard.html',
+          controller: 'AddWardCtrl'
+        }
       }
-    }
-  })
-  .state('app.addSubject', {
-    url: '/settings/addSubject',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/addSubject.html',
-        controller : 'AddSubjectCtrl'
+    })
+    .state('app.addSubject', {
+      url: '/settings/addSubject',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/addSubject.html',
+          controller: 'AddSubjectCtrl'
+        }
       }
-    }
-  })
-  .state('app.browse', {
+    })
+    .state('app.browse', {
       url: '/browse',
       views: {
         'menuContent': {
@@ -154,7 +193,7 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
         }
       }
     })
-  .state('app.about', {
+    .state('app.about', {
       url: '/about',
       views: {
         'menuContent': {
@@ -162,7 +201,7 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
         }
       }
     })
-  .state('app.profile', {
+    .state('app.profile', {
       url: '/profile',
       views: {
         'menuContent': {
@@ -171,12 +210,12 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
         }
       }
     })
-  .state('app.settings', {
+    .state('app.settings', {
       url: '/settings',
       views: {
         'menuContent': {
           templateUrl: 'templates/settings.html',
-          controller:"SettingsCtrl"
+          controller: "SettingsCtrl"
         }
       }
     })
@@ -191,24 +230,24 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
     })
 
   .state('app.single', {
-    url: '/playlists/:playlistId',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/playlist.html',
-        controller: 'PlaylistCtrl'
-      }
-    }
-  })
-  .state('app.signup', {
-    url: '/signup',
-     views: {
+      url: '/playlists/:playlistId',
+      views: {
         'menuContent': {
-          templateUrl: 'templates/signup.html',
-          controller:'LoginCtrl'
+          templateUrl: 'templates/playlist.html',
+          controller: 'PlaylistCtrl'
         }
       }
-  })
-  .state('app.chats', {
+    })
+    .state('app.signup', {
+      url: '/signup',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/signup.html',
+          controller: 'LoginCtrl'
+        }
+      }
+    })
+    .state('app.chats', {
       url: '/chats',
       views: {
         'menuContent': {
@@ -235,42 +274,42 @@ angular.module('starter', ['ionic','ionic.service.core','ionic.service.analytics
         }
       }
     })
-  .state('app.login', {
-    url: '/login',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/login.html',
-        controller: 'LoginCtrl'
+    .state('app.login', {
+      url: '/login',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/login.html',
+          controller: 'LoginCtrl'
+        }
       }
-    }
-  })
-  .state('app.feedback', {
-    url: '/feedback',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/feedback.html',
-        controller: 'FeedbackCtrl'
+    })
+    .state('app.feedback', {
+      url: '/feedback',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/feedback.html',
+          controller: 'FeedbackCtrl'
+        }
       }
-    }
-  })
-  .state('app.changePassword', {
-    url: '/settings/changePassword',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/changePassword.html',
-        controller: 'PasswordCtrl'
+    })
+    .state('app.changePassword', {
+      url: '/settings/changePassword',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/changePassword.html',
+          controller: 'PasswordCtrl'
+        }
       }
-    }
-  })
-  .state('app.logout', {
-    url: '/logout',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/logout.html',
-        controller: 'LogoutCtrl'
+    })
+    .state('app.logout', {
+      url: '/logout',
+      views: {
+        'menuContent': {
+          templateUrl: 'templates/logout.html',
+          controller: 'LogoutCtrl'
+        }
       }
-    }
-  });
+    });
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/app/browse');
 });

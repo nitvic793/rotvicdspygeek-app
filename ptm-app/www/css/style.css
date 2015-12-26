@@ -79,3 +79,14 @@ body{
 .list .item.item-accordion.ng-hide-remove {
   display: block !important;
 }
+
+.item-radio input {
+
+  &:checked + .item-content {
+    background: #f7f7f7;
+  }
+
+  &:checked + .radio-icon {
+    visibility: visible;
+  }
+}
