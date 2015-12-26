@@ -1,0 +1,17 @@
+<ion-modal-view>
+        <ion-header-bar class="bar bar-header bar-positive">
+          <h1 class="title">Post Review</h1>
+          <button class="button button-clear button-primary" ng-click="studentReviewModal.hide()">Cancel</button>
+        </ion-header-bar>
+        <ion-content class="padding">
+              <div class="list padding">
+            	  <label class="item item-input">
+            	    <input type="text" placeholder="To student name" ng-model="review.studentName" ng-click="modal.show()">
+            	  </label>
+            	  <label class="item item-input">
+            	    <textarea placeholder="Comments" ng-model="review.comments" rows="10"></textarea>
+            	  </label>
+            	  <button class="button button-full button-positive" ng-click="postReview()">Post</button>
+              </div>
+        </ion-content>
+</ion-modal-view>
