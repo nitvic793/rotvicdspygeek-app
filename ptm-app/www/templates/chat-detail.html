@@ -92,6 +92,17 @@ scroll {
   max-width: 240px !important;
 }
 
+.date{
+  display: block !important;
+  padding: 10px !important;
+  text-align: center !important;
+}
+
+.break{
+  width: 200px;
+  display: block !important;
+}
+
 .other
 {
   text-align: right !important;
@@ -107,6 +118,9 @@ scroll {
       <div ng-repeat="message in messages"
            ng-class="(message.userId != myId)?'other':'messages'">
 
+        <div ng-if="message.dateBreak">
+          <div class="item item-divider date">{{message.date | date:'MMMM d, yyyy'}}</div>
+        </div>
         <div class="message" ng-class="{'slide-right': hideTime, '': !hideTime}">
           <span>{{ message.text }}</span>
         </div>
@@ -127,5 +141,5 @@ scroll {
       </button>
     </ion-footer-bar>
   </ion-pane>
-  
+
 </ion-view>

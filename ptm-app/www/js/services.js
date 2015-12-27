@@ -131,6 +131,12 @@ angular.module('starter.services', ['ionic', 'ngCookies', 'starter.config'])
         return sessionService.get("loginData").model;
       }
       return null;
+    },
+    updateLastUpdatedForUser: function(userId){
+      
+    },
+    updateLastUpdatedForGroup: function(groupId){
+
     }
   };
 })

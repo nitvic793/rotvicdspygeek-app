@@ -555,6 +555,20 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $scope.userData = chatUser;
     }
   }
+  var onGetChatsCallback = function(){
+    $ionicScrollDelegate.scrollBottom(true);
+    if(!$scope.messages || $scope.messages.length==0)return;
+    $scope.messages[0].dateBreak = true;
+    var date = new Date($scope.messages[0].date);
+    for(var i=0;i<$scope.messages.length;++i){
+      var msg = $scope.messages[i];
+      if(date.getDate()!=new Date(msg.date).getDate()){
+        console.log(date.getDate());
+        $scope.messages[i].dateBreak = true;
+        date = new Date(msg.date);
+      }
+    }
+  }
   getUserData();
   var socketId;
   function registerSocket(){
@@ -571,13 +585,13 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
   registerSocket();
   io.socket.on("connect", function onConnect(){
     registerSocket();
-    getLatestChats();
+    //getLatestChats(onGetChatsCallback);
   });
-
+  var inProcess = false;
   function getLatestChats(cb){
-    //sessionService.destroy(userId);
+    //sessionService.destroy($scope.myId+'_'+userId);
     if(sessionService.get($scope.myId+'_'+userId)!=null){
-      $scope.messages = sessionService.get(userId);
+      $scope.messages = sessionService.get($scope.myId+'_'+userId);
     }
     var skip = 0;
     if($scope.messages!=null){
@@ -587,21 +601,27 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
       $scope.messages = [];
     }
     Chats.getChats($scope.myId,userId,skip, function(data){
-      data.forEach(function (val,i,a) {
+      if(inProcess)
+        return;
+      inProcess = true;
+      for(i=0;i<data.length;++i){
+        var val = data[i];
         obj = {
           userId: val.from.id,
           text: val.message,
-          time: new Date(val.time).toLocaleTimeString().replace(/:\d+ /, ' ')
+          time: new Date(val.time).toLocaleTimeString().replace(/:\d+ /, ' '),
+          date: val.time
         };
         $scope.messages.push(obj);
         sessionService.persist($scope.myId+'_'+userId,$scope.messages);
-      });
+      }
       if(cb){
         cb();
       }
       if(data.length!=0){
         $ionicScrollDelegate.scrollBottom(true);
       }
+      inProcess = false;
     });
   }
   io.socket.on('message', function(msg){
@@ -610,7 +630,8 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
     var obj = {
       userId: msg.from.id,
       text: msg.message,
-      time: new Date(msg.time).toLocaleTimeString().replace(/:\d+ /, ' ')
+      time: new Date(msg.time).toLocaleTimeString().replace(/:\d+ /, ' '),
+      date: msg.time
     };
     $scope.messages.push(obj);
     $scope.$apply();
@@ -619,9 +640,7 @@ angular.module('starter.controllers', ['ionic', 'starter.config','starter.servic
 
   });
 
-  getLatestChats(function(){
-    $ionicScrollDelegate.scrollBottom(true);
-  });
+  getLatestChats(onGetChatsCallback);
 
   $scope.sendMessage = function() {
     var d = new Date();
